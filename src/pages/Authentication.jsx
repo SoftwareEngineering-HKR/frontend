@@ -1,4 +1,4 @@
-// professional main auth page
+// main auth page
 import { useState } from "react";
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
