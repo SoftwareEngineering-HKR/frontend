@@ -1,4 +1,4 @@
-// professional register form
+// register form
 import Input from "../common/Input";
 import Button from "../common/Button";
 import { useState } from "react";
