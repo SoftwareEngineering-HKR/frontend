@@ -92,7 +92,7 @@ const initialDevices = [
 ];
 
 function App() {
-  const [devices, setDevices] = useState(initialDevices);
+  const [devices, setDevices] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleLogout = () => {
