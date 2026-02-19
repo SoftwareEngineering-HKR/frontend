@@ -2,21 +2,43 @@ import SearchBar from "../components/dashboard/SearchBar";
 import Header from "../components/dashboard/Header";
 import DeviceList from "../components/dashboard/DeviceList";
 import Button from "../components/common/Button";
+import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
 
 export default function Overview(props) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredDevices = props.devices.filter(
+    (device) =>
+      device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      device.room.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   return (
     <>
-      {/* Header */}
       <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
+        {/* Header */}
         <Header devices={props.devices} onLogOut={props.onLogOut} />
-      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <SearchBar />
-        <Button text="Add Device" />
-        <DeviceList />
-      </main>
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {/* Search and Add Device */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
+            </div>
+            <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors whitespace-nowrap">
+              <Plus className="w-5 h-5" />
+              Add Device
+            </button>
+          </div>
+
+          <DeviceList />
+        </main>
+      </div>
     </>
   );
 }
