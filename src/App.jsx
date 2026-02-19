@@ -99,11 +99,42 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  const handleDeviceAction = (deviceId, actionId, value) => {
+    setDevices((prevDevices) =>
+      prevDevices.map((device) => {
+        if (device.id === deviceId) {
+          return {
+            ...device,
+            actions: device.actions.map((action) =>
+              action.id === actionId && action.type === "toggle"
+                ? { ...action, value }
+                : action,
+            ),
+          };
+        }
+        return device;
+      }),
+    );
+  };
+
+  const handleRemoveDevice = (deviceId) => {
+    setDevices((prevDevices) =>
+      prevDevices.filter((device) => device.id !== deviceId),
+    );
+  };
+
   return (
     <Routes>
       <Route
         path="/"
-        element={<Overview devices={devices} onLogout={handleLogout} />}
+        element={
+          <Overview
+            devices={devices}
+            onLogout={handleLogout}
+            onDeviceAction={handleDeviceAction}
+            onRemoveDevice={handleRemoveDevice}
+          />
+        }
       />
     </Routes>
   );

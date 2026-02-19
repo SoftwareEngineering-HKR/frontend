@@ -46,7 +46,11 @@ export default function Overview(props) {
               </p>
             </div>
           ) : (
-            <DeviceList filteredDevices={filteredDevices} />
+            <DeviceList
+              filteredDevices={filteredDevices}
+              onDeviceAction={props.onDeviceAction}
+              onRemoveDevice={props.onRemoveDevice}
+            />
           )}
         </main>
       </div>
