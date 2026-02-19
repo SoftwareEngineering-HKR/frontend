@@ -14,6 +14,7 @@ import {
   Wifi,
   WifiOff,
   Power,
+  Trash2,
 } from "lucide-react";
 
 // Can add more icons as needed, and maybe add a default icon for unknown device types
@@ -71,6 +72,13 @@ export default function DeviceCard(props) {
               </div>
             </div>
             {/* TODO: add remove button (with confirmation of wanting to remove that*/}
+            <button
+              onClick={() => props.onRemove(props.device.id)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              title="Remove device"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Online/Offline Part*/}

@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
 import { useState, useEffect } from "react";
+import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
 
 const initialDevices = [
   {
@@ -94,6 +95,14 @@ const initialDevices = [
 function App() {
   const [devices, setDevices] = useState(initialDevices);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // For the confirmation dialog when removing a device
+  // This should also be okay for confirming for example to delete users from the admin page
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -118,25 +127,49 @@ function App() {
   };
 
   const handleRemoveDevice = (deviceId) => {
-    setDevices((prevDevices) =>
-      prevDevices.filter((device) => device.id !== deviceId),
-    );
+    const device = devices.find((d) => d.id === deviceId);
+    if (!device) return;
+
+    setConfirmDialog({
+      isOpen: true,
+      title: "Remove Device",
+      message: `Are you sure you want to remove "${device.name}"?`,
+      onConfirm: () => {
+        (setDevices((prevDevices) =>
+          prevDevices.filter((device) => device.id !== deviceId),
+        ),
+          setConfirmDialog({ ...confirmDialog, isOpen: false }));
+      },
+    });
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
   };
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <Overview
-            devices={devices}
-            onLogout={handleLogout}
-            onDeviceAction={handleDeviceAction}
-            onRemoveDevice={handleRemoveDevice}
-          />
-        }
+    <>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Overview
+              devices={devices}
+              onLogout={handleLogout}
+              onDeviceAction={handleDeviceAction}
+              onRemoveDevice={handleRemoveDevice}
+            />
+          }
+        />
+      </Routes>
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={closeConfirmDialog}
       />
-    </Routes>
+    </>
   );
 }
 
