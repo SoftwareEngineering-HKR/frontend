@@ -1,9 +1,10 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
 
+// Mock initial devices
 const initialDevices = [
   {
     id: "1",
@@ -93,19 +94,14 @@ const initialDevices = [
 ];
 
 function App() {
+  const [currentUser, setCurrentUser] = useState(null);
   const [devices, setDevices] = useState(initialDevices);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    onConfirm: () => {},
-  });
+  const [confirmDialog, setConfirmDialog] = useState(null);
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    setCurrentUser(null);
   };
 
   const handleDeviceAction = (deviceId, actionId, value) => {
@@ -130,44 +126,72 @@ function App() {
     const device = devices.find((d) => d.id === deviceId);
     if (!device) return;
 
-    setConfirmDialog({
-      isOpen: true,
+    openConfirm({
       title: "Remove Device",
       message: `Are you sure you want to remove "${device.name}"?`,
       onConfirm: () => {
-        (setDevices((prevDevices) =>
+        setDevices((prevDevices) =>
           prevDevices.filter((device) => device.id !== deviceId),
-        ),
-          setConfirmDialog({ ...confirmDialog, isOpen: false }));
+        );
+        closeConfirm();
       },
     });
   };
 
-  const closeConfirmDialog = () => {
-    setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+  const openConfirm = ({ title, message, onConfirm }) => {
+    setConfirmDialog({
+      title,
+      message,
+      onConfirm,
+    });
+  };
+
+  const closeConfirm = () => {
+    setConfirmDialog(null);
   };
 
   return (
     <>
       <Routes>
+        {/* Authentication Route */}
         <Route
-          path="/"
+          path="/authentication"
           element={
-            <Overview
-              devices={devices}
-              onLogout={handleLogout}
-              onDeviceAction={handleDeviceAction}
-              onRemoveDevice={handleRemoveDevice}
-            />
+            currentUser ? (
+              <Navigate to="/overview" />
+            ) : (
+              <Authentication onAuthSuccess={setCurrentUser} />
+            )
           }
         />
+
+        {/* Overview Route */}
+        <Route
+          path="/overview"
+          element={
+            currentUser ? (
+              <Overview
+                devices={devices}
+                onLogout={handleLogout}
+                onDeviceAction={handleDeviceAction}
+                onRemoveDevice={handleRemoveDevice}
+              />
+            ) : (
+              <Navigate to="/authentication" />
+            )
+          }
+        />
+
+        {/* Redirect to authentication if user types an not used path*/}
+        <Route path="*" element={<Navigate to="/authentication" />} />
       </Routes>
+
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={closeConfirmDialog}
+        isOpen={!!confirmDialog}
+        title={confirmDialog?.title}
+        message={confirmDialog?.message}
+        onConfirm={confirmDialog?.onConfirm}
+        onCancel={closeConfirm}
       />
     </>
   );
