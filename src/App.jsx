@@ -95,6 +95,7 @@ const initialDevices = [
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(true);
   const [devices, setDevices] = useState(initialDevices);
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
@@ -175,6 +176,7 @@ function App() {
                 onLogout={handleLogout}
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
+                isAdmin={isAdmin}
               />
             ) : (
               <Navigate to="/authentication" />
