@@ -18,7 +18,11 @@ export default function Overview(props) {
     <>
       <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <Header devices={props.devices} onLogOut={props.onLogOut} />
+        <Header
+          devices={props.devices}
+          onLogout={props.onLogout}
+          isAdmin={props.isAdmin}
+        />
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -52,6 +56,7 @@ export default function Overview(props) {
               filteredDevices={filteredDevices}
               onDeviceAction={props.onDeviceAction}
               onRemoveDevice={props.onRemoveDevice}
+              isAdmin={props.isAdmin}
             />
           )}
         </main>
