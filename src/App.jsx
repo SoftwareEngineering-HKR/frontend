@@ -12,6 +12,12 @@ const initialDevices = [
     type: "light",
     isOnline: true,
     room: "Living Room",
+    schedule: {
+      enabled: true,
+      days: ["monday", "wednesday", "friday"],
+      startTime: "16:00",
+      endTime: "22:00",
+    },
     actions: [{ id: "power", label: "Power", type: "toggle", value: true }],
   },
   {
@@ -114,7 +120,7 @@ const initialUsers = [
     name: "Admin",
     email: "admin@example.com",
     role: "admin",
-    devices: initialDevices,
+    devices: initialDevices.slice(5),
   },
 ];
 
@@ -124,7 +130,6 @@ function App() {
   // This will probably match with the backend for later
   // const currentUserData = users.find((u) => u.id === currentUser?.id);
   const currentUserData = users.find((u) => u.email === currentUser?.email);
-
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
@@ -193,6 +198,25 @@ function App() {
     });
   };
 
+  const handleScheduleUpdate = (deviceId, schedule) => {
+    if (!currentUser) return;
+
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        // Using email for now, later use id when backend is implemented
+        if (user.email === currentUser.email) {
+          return {
+            ...user,
+            devices: user.devices.map((device) =>
+              device.id === deviceId ? { ...device, schedule } : device,
+            ),
+          };
+        }
+        return user;
+      }),
+    );
+  };
+
   const openConfirm = ({ title, message, onConfirm }) => {
     setConfirmDialog({
       title,
@@ -230,6 +254,7 @@ function App() {
                 onLogout={handleLogout}
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
+                onScheduleUpdate={handleScheduleUpdate}
                 isAdmin={currentUserData?.role === "admin"}
               />
             ) : (

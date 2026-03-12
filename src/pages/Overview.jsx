@@ -56,6 +56,7 @@ export default function Overview(props) {
               filteredDevices={filteredDevices}
               onDeviceAction={props.onDeviceAction}
               onRemoveDevice={props.onRemoveDevice}
+              onScheduleUpdate={props.onScheduleUpdate}
               isAdmin={props.isAdmin}
             />
           )}
