@@ -1,7 +1,8 @@
 // Ideas for the devices:
 // Can create component for each device type, and then have a generic DeviceCard that takes in the device data and renders the appropriate component based on the device type. Too have more customized controls for each device type.
 // Or, have like a generic DeviceCard that just takes in the device data and renders the appropriate controls based on the actions array. And have toggles and buttons for the different action types. This is simpler and more flexible, but less customized for each device type. I think this is better for now, and we can always add more customization later if we want.
-
+import Schedule from "./Schedule";
+import { useState, useEffect } from "react";
 import {
   Lightbulb,
   Thermometer,
@@ -71,7 +72,7 @@ export default function DeviceCard(props) {
                 </p>
               </div>
             </div>
-            {/* TODO: add remove button (with confirmation of wanting to remove that*/}
+            {/* Remove button */}
             <button
               onClick={() => props.onRemove(props.device.id)}
               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -101,6 +102,7 @@ export default function DeviceCard(props) {
           </div>
 
           {/* Device Actions */}
+          {/* This will be changed as specific actions are implemented based on the device type */}
           <div className="space-y-2">
             {props.device.actions.map((action) => (
               <div key={action.id}>
@@ -156,6 +158,15 @@ export default function DeviceCard(props) {
               </div>
             ))}
           </div>
+
+          {/* Scheduling */}
+          <Schedule
+            schedule={props.device.schedule}
+            isOnline={props.device.isOnline}
+            onChange={(newSchedule) =>
+              props.onScheduleUpdate?.(props.device.id, newSchedule)
+            }
+          />
         </div>
       </div>
     </>

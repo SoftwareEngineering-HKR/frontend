@@ -10,6 +10,8 @@ export default function DeviceList(props) {
             device={device}
             onAction={props.onDeviceAction}
             onRemove={props.onRemoveDevice}
+            onScheduleUpdate={props.onScheduleUpdate}
+            isAdmin={props.isAdmin}
           />
         ))}
       </div>

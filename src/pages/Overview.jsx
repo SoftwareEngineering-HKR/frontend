@@ -18,7 +18,11 @@ export default function Overview(props) {
     <>
       <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <Header devices={props.devices} onLogOut={props.onLogOut} />
+        <Header
+          devices={props.devices}
+          onLogout={props.onLogout}
+          isAdmin={props.isAdmin}
+        />
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -30,10 +34,12 @@ export default function Overview(props) {
                 setSearchQuery={setSearchQuery}
               />
             </div>
-            <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors whitespace-nowrap">
-              <Plus className="w-5 h-5" />
-              Add Device
-            </button>
+            {props.isAdmin && (
+              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors whitespace-nowrap">
+                <Plus className="w-5 h-5" />
+                Add Device
+              </button>
+            )}
           </div>
 
           {/* Devices List */}
@@ -50,6 +56,8 @@ export default function Overview(props) {
               filteredDevices={filteredDevices}
               onDeviceAction={props.onDeviceAction}
               onRemoveDevice={props.onRemoveDevice}
+              onScheduleUpdate={props.onScheduleUpdate}
+              isAdmin={props.isAdmin}
             />
           )}
         </main>

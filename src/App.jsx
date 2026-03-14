@@ -12,6 +12,12 @@ const initialDevices = [
     type: "light",
     isOnline: true,
     room: "Living Room",
+    schedule: {
+      enabled: true,
+      days: ["monday", "wednesday", "friday"],
+      startTime: "16:00",
+      endTime: "22:00",
+    },
     actions: [{ id: "power", label: "Power", type: "toggle", value: true }],
   },
   {
@@ -93,9 +99,37 @@ const initialDevices = [
   },
 ];
 
+// Mock some users
+const initialUsers = [
+  {
+    id: "user-1",
+    name: "John Doe",
+    email: "user@example.com",
+    role: "user",
+    devices: initialDevices.slice(0, 5),
+  },
+  {
+    id: "user-2",
+    name: "Jane Smith",
+    email: "jane@example.com",
+    role: "user",
+    devices: initialDevices.slice(5),
+  },
+  {
+    id: "admin-1",
+    name: "Admin",
+    email: "admin@example.com",
+    role: "admin",
+    devices: initialDevices.slice(5),
+  },
+];
+
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [devices, setDevices] = useState(initialDevices);
+  const [users, setUsers] = useState(initialUsers);
+  // This will probably match with the backend for later
+  // const currentUserData = users.find((u) => u.id === currentUser?.id);
+  const currentUserData = users.find((u) => u.email === currentUser?.email);
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
@@ -105,37 +139,82 @@ function App() {
   };
 
   const handleDeviceAction = (deviceId, actionId, value) => {
-    setDevices((prevDevices) =>
-      prevDevices.map((device) => {
-        if (device.id === deviceId) {
+    if (!currentUser) return;
+
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        // Using email for now, later use id when backend is implemented
+        if (user.email === currentUser.email) {
           return {
-            ...device,
-            actions: device.actions.map((action) =>
-              action.id === actionId && action.type === "toggle"
-                ? { ...action, value }
-                : action,
-            ),
+            ...user,
+            devices: user.devices.map((device) => {
+              if (device.id === deviceId) {
+                return {
+                  ...device,
+                  actions: device.actions.map((action) =>
+                    action.id === actionId && action.type === "toggle"
+                      ? { ...action, value }
+                      : action,
+                  ),
+                };
+              }
+              return device;
+            }),
           };
         }
-        return device;
+        return user;
       }),
     );
   };
 
   const handleRemoveDevice = (deviceId) => {
-    const device = devices.find((d) => d.id === deviceId);
+    if (!currentUser) return;
+
+    const device = currentUserData?.devices.find((d) => d.id === deviceId);
+
     if (!device) return;
 
     openConfirm({
       title: "Remove Device",
       message: `Are you sure you want to remove "${device.name}"?`,
+
       onConfirm: () => {
-        setDevices((prevDevices) =>
-          prevDevices.filter((device) => device.id !== deviceId),
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => {
+            // Using email for now, later use id when backend is implemented
+            if (user.email === currentUser.email) {
+              return {
+                ...user,
+                devices: user.devices.filter(
+                  (device) => device.id !== deviceId,
+                ),
+              };
+            }
+            return user;
+          }),
         );
         closeConfirm();
       },
     });
+  };
+
+  const handleScheduleUpdate = (deviceId, schedule) => {
+    if (!currentUser) return;
+
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        // Using email for now, later use id when backend is implemented
+        if (user.email === currentUser.email) {
+          return {
+            ...user,
+            devices: user.devices.map((device) =>
+              device.id === deviceId ? { ...device, schedule } : device,
+            ),
+          };
+        }
+        return user;
+      }),
+    );
   };
 
   const openConfirm = ({ title, message, onConfirm }) => {
@@ -171,10 +250,12 @@ function App() {
           element={
             currentUser ? (
               <Overview
-                devices={devices}
+                devices={currentUserData?.devices || []}
                 onLogout={handleLogout}
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
+                onScheduleUpdate={handleScheduleUpdate}
+                isAdmin={currentUserData?.role === "admin"}
               />
             ) : (
               <Navigate to="/authentication" />
