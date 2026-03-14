@@ -1,5 +1,5 @@
 import LogoutButton from "../auth/LogOutButton";
-import { Home, Users } from "lucide-react";
+import { Home, Users, LogOut } from "lucide-react";
 
 export default function Header(props) {
   const onlineCount = props.devices.filter((d) => d.isOnline).length;
@@ -30,12 +30,12 @@ export default function Header(props) {
                   <span className="hidden sm:inline">Manage Users</span>
                 </button>
               )}
-              {/* Mock logout button */}
               <button
                 onClick={props.onLogout}
                 className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                Logout
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
