@@ -4,15 +4,27 @@ import DeviceList from "../components/dashboard/DeviceList";
 import Button from "../components/common/Button";
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
+import AddDeviceModal from "../components/dashboard/AddDeviceModal";
+import Toast from "../components/common/Toast";
 
 export default function Overview(props) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const filteredDevices = props.devices.filter(
     (device) =>
       device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.room.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const connectedDeviceIds = props.devices.map((d) => d.id);
+
+  const handleDeviceAdded = (newDevice) => {
+    props.onAddDevice(newDevice);
+    setIsAddModalOpen(false);
+    setToast({ message: `"${newDevice.name}" added to your dashboard.` });
+  };
 
   return (
     <>
@@ -35,10 +47,12 @@ export default function Overview(props) {
               />
             </div>
             {props.isAdmin && (
-              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors whitespace-nowrap">
-                <Plus className="w-5 h-5" />
-                Add Device
-              </button>
+              <Button
+                text="Add Device"
+                variant="primary"
+                icon={<Plus className="w-5 h-5" />}
+                onClick={() => setIsAddModalOpen(true)}
+              />
             )}
           </div>
 
@@ -62,6 +76,17 @@ export default function Overview(props) {
           )}
         </main>
       </div>
+
+      <AddDeviceModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleDeviceAdded}
+        connectedDeviceIds={connectedDeviceIds}
+      />
+ 
+      {toast && (
+        <Toast message={toast.message} onDismiss={() => setToast(null)} />
+      )}
     </>
   );
 }
