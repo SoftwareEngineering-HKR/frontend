@@ -76,7 +76,7 @@ export default function RegisterForm({ onLogin }) {
       </div>
       
       <div className="mt-2">
-        <Button text="Create Account" type="submit" />
+        <Button text="Create Account" type="submit" fullWidth/>
       </div>
     </form>
   );
