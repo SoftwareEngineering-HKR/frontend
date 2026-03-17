@@ -1,9 +1,11 @@
-import LogoutButton from "../auth/LogOutButton";
 import { Home, Users, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Button from "../common/Button";
 
 export default function Header(props) {
   const onlineCount = props.devices.filter((d) => d.isOnline).length;
   const offlineCount = props.devices.filter((d) => !d.isOnline).length;
+  const navigate = useNavigate();
 
   return (
     <>
@@ -25,18 +27,19 @@ export default function Header(props) {
             </div>
             <div className="flex items-center gap-3">
               {props.isAdmin && (
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                  <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Manage Users</span>
-                </button>
+                <Button
+                  text="Manage Users"
+                  icon={<Users className="w-4 h-4"/>}
+                  onClick={() => navigate("/admin")}
+                  variant="ghost"
+                />
               )}
-              <button
+              <Button
+                text="Log Out"
+                icon={<LogOut className="w-4 h-4"/>}
                 onClick={props.onLogout}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
+                variant="ghost"
+              />
             </div>
           </div>
         </div>
