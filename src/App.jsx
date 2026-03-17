@@ -3,6 +3,7 @@ import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
 import { useState } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
 
 // Mock initial devices
 const initialDevices = [
@@ -274,6 +275,17 @@ function App() {
                 onScheduleUpdate={handleScheduleUpdate}
                 isAdmin={currentUserData?.role === "admin"}
               />
+            ) : (
+              <Navigate to="/authentication" />
+            )
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            currentUser && currentUserData.role === "admin" ? (
+              <AdminPanel/>
             ) : (
               <Navigate to="/authentication" />
             )
