@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Modal from "../common/Modal";
 import Button from "../common/Button";
 import Input from "../common/Input";
@@ -146,7 +146,7 @@ function DeviceListStep({ devices, loading, onSelect }) {
 }
 
 // input custom device info before adding to Overview
-function ConfigureStep({ device, deviceName, room, onNameChange, onRoomChange, nameRef }) {
+function ConfigureStep({ device, deviceName, room, onNameChange, onRoomChange }) {
   const Icon = deviceIcons[device.type] || Lightbulb;
 
   return (
@@ -175,7 +175,6 @@ function ConfigureStep({ device, deviceName, room, onNameChange, onRoomChange, n
       </div>
 
       <Input
-        ref={nameRef}
         label="Device Name"
         placeholder="e.g. Kitchen Light"
         value={deviceName}
@@ -201,13 +200,6 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd, connectedDevice
   const [room, setRoom] = useState("");
 
   const { devices, loading } = useMockDeviceFetch(connectedDeviceIds);
-  const nameRef = useRef(null);
-
-  useEffect(() => {
-    if (step === "configure") {
-      setTimeout(() => nameRef.current?.focus(), 50);
-    }
-  }, [step]);
 
   useEffect(() => {
     if (isOpen) {
@@ -285,7 +277,6 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd, connectedDevice
             room={room}
             onNameChange={setDeviceName}
             onRoomChange={setRoom}
-            nameRef={nameRef}
           />
         )}
       </div>
