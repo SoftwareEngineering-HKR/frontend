@@ -198,6 +198,22 @@ function App() {
     });
   };
 
+  // temp handler to add device only to admins
+  // will be replaced with some proper API call
+  const handleAddDevice = (newDevice) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        if (user.role === "admin") {
+          return {
+            ...user,
+            devices: [...user.devices, newDevice],
+          };
+        }
+        return user;
+      }),
+    );
+  };
+
   const handleScheduleUpdate = (deviceId, schedule) => {
     if (!currentUser) return;
 
@@ -254,6 +270,7 @@ function App() {
                 onLogout={handleLogout}
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
+                onAddDevice={handleAddDevice}
                 onScheduleUpdate={handleScheduleUpdate}
                 isAdmin={currentUserData?.role === "admin"}
               />

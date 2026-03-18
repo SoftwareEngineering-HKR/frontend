@@ -58,7 +58,7 @@ export default function LoginForm({ onLogin }) {
       </div>
       
       <div className="mt-2">
-        <Button text="Sign In" type="submit" />
+        <Button text="Sign In" type="submit" fullWidth/>
       </div>
     </form>
   );
