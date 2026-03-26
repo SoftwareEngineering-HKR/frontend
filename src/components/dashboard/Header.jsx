@@ -1,4 +1,4 @@
-import LogoutButton from "../auth/LogOutButton";
+import { Link } from "react-router-dom";
 import { Home, Users, LogOut } from "lucide-react";
 
 export default function Header(props) {
@@ -25,10 +25,13 @@ export default function Header(props) {
             </div>
             <div className="flex items-center gap-3">
               {props.isAdmin && (
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                <Link
+                  to="/manage-users"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
                   <Users className="w-4 h-4" />
                   <span className="hidden sm:inline">Manage Users</span>
-                </button>
+                </Link>
               )}
               <button
                 onClick={props.onLogout}

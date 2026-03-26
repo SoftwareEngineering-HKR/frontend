@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
+import ManageUsers from "./pages/ManageUsers.jsx";
 import { useState } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
 
@@ -214,6 +215,55 @@ function App() {
     );
   };
 
+  const handleUserDeviceToggle = (userId, device, isAssigned) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        if (user.id !== userId) return user;
+
+        const hasDevice = user.devices.some((d) => d.id === device.id);
+        if (isAssigned && !hasDevice) {
+          return {
+            ...user,
+            devices: [...user.devices, device],
+          };
+        }
+        if (!isAssigned && hasDevice) {
+          return {
+            ...user,
+            devices: user.devices.filter((d) => d.id !== device.id),
+          };
+        }
+        return user;
+      }),
+    );
+  };
+
+  const handleUserRoleToggle = (userId) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        if (user.id !== userId) return user;
+        return {
+          ...user,
+          role: user.role === "admin" ? "user" : "admin",
+        };
+      }),
+    );
+  };
+
+  const handleRemoveUser = (userId) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+
+    openConfirm({
+      title: "Remove User",
+      message: `Are you sure you want to remove ${user.name}?`,
+      onConfirm: () => {
+        setUsers((prevUsers) => prevUsers.filter((u) => u.id !== userId));
+        closeConfirm();
+      },
+    });
+  };
+
   const handleScheduleUpdate = (deviceId, schedule) => {
     if (!currentUser) return;
 
@@ -274,6 +324,29 @@ function App() {
                 onScheduleUpdate={handleScheduleUpdate}
                 isAdmin={currentUserData?.role === "admin"}
               />
+            ) : (
+              <Navigate to="/authentication" />
+            )
+          }
+        />
+
+        {/* Manage Users Route */}
+        <Route
+          path="/manage-users"
+          element={
+            currentUser ? (
+              currentUserData?.role === "admin" ? (
+                <ManageUsers
+                  users={users}
+                  allDevices={initialDevices}
+                  onToggleUserDevice={handleUserDeviceToggle}
+                  onToggleUserRole={handleUserRoleToggle}
+                  onRemoveUser={handleRemoveUser}
+                  onLogout={handleLogout}
+                />
+              ) : (
+                <Navigate to="/overview" />
+              )
             ) : (
               <Navigate to="/authentication" />
             )
