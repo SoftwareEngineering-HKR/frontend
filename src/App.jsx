@@ -3,9 +3,11 @@ import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
 import { useState } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
+import Toast from "./components/common/Toast.jsx";
+import { useWebSocket } from "./hooks/useWebSocket.js";
 
-// Mock initial devices
-const initialDevices = [
+// Mock initial devices, will removed once basic backend is done
+/*const initialDevices = [
   {
     id: "1",
     name: "Living Room Light",
@@ -122,23 +124,24 @@ const initialUsers = [
     role: "admin",
     devices: initialDevices.slice(5),
   },
-];
+]; */
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [users, setUsers] = useState(initialUsers);
-  // This will probably match with the backend for later
-  // const currentUserData = users.find((u) => u.id === currentUser?.id);
-  const currentUserData = users.find((u) => u.email === currentUser?.email);
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [actionError, setActionError] = useState(null); // for WS action errors
+  // Connects when logged in, disconnects on logout -> might need to change with proper login/logout/token stuff
+  const { devices, connectionStatus, wsError, sendDeviceUpdate } =
+    useWebSocket(!!currentUser);
 
   const handleLogout = () => {
     setCurrentUser(null);
   };
 
-  const handleDeviceAction = (deviceId, actionId, value) => {
+  // Will be removed later
+  /* const handleDeviceAction = (deviceId, actionId, value) => {
     if (!currentUser) return;
 
     setUsers((prevUsers) =>
@@ -165,8 +168,23 @@ function App() {
         return user;
       }),
     );
+  }; */
+
+  // Need to fix the value part later for different action types
+  const handleDeviceAction = async (deviceId, actionId, value) => {
+    if (!currentUser) return;
+
+    const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
+
+    try {
+      await sendDeviceUpdate(deviceId, numericValue);
+    } catch (error) {
+      setActionError(error.message);
+    }
   };
 
+  // Will be removed later
+  /*
   const handleRemoveDevice = (deviceId) => {
     if (!currentUser) return;
 
@@ -231,6 +249,29 @@ function App() {
         return user;
       }),
     );
+  }; */
+
+  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
+  const handleRemoveDevice = (deviceId) => {
+    openConfirm({
+      title: "Remove Device",
+      message: "Removing devices is not yet supported.",
+      onConfirm: closeConfirm,
+    });
+  };
+
+  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
+  const handleAddDevice = (newDevice) => {
+    console.log("Add device not yet supported by backend", newDevice);
+  };
+
+  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
+  const handleScheduleUpdate = (deviceId, schedule) => {
+    console.log(
+      "Schedule update not yet supported by backend",
+      deviceId,
+      schedule,
+    );
   };
 
   const openConfirm = ({ title, message, onConfirm }) => {
@@ -266,13 +307,14 @@ function App() {
           element={
             currentUser ? (
               <Overview
-                devices={currentUserData?.devices || []}
+                devices={devices}
+                connectionStatus={connectionStatus}
                 onLogout={handleLogout}
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
                 onAddDevice={handleAddDevice}
                 onScheduleUpdate={handleScheduleUpdate}
-                isAdmin={currentUserData?.role === "admin"}
+                isAdmin={false} // Will need to be implemented properly when backend is ready
               />
             ) : (
               <Navigate to="/authentication" />
@@ -291,6 +333,16 @@ function App() {
         onConfirm={confirmDialog?.onConfirm}
         onCancel={closeConfirm}
       />
+
+      {/* Shows WebSocket errors like idk device timeout, access denied, and so on? */}
+      {(actionError || wsError) && (
+        <Toast
+          message={actionError ?? wsError}
+          onDismiss={() => {
+            setActionError(null);
+          }}
+        />
+      )}
     </>
   );
 }
