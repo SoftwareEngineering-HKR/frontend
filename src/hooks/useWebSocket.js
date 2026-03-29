@@ -115,9 +115,13 @@ export function useWebSocket(isLoggedIn) {
               d.id === deviceID
                 ? {
                     ...d,
-                    actions: d.actions.map((a) =>
-                      a.type === "toggle" ? { ...a, value: content === 1 } : a,
-                    ),
+                    actions: d.actions.map((a) => {
+                      if (a.type === "toggle")
+                        return { ...a, value: content === 1 ? 1 : 0 };
+                      if (a.type === "slider")
+                        return { ...a, value: Number(content) };
+                      return a; // for sensors, as we only read values from them
+                    }),
                   }
                 : d,
             ),

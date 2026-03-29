@@ -114,7 +114,15 @@ function ToggleControl({ action, deviceId, isOnline, onAction }) {
 function SliderControl({ action, deviceId, isOnline, onAction }) {
   const min = action.min ?? 0;
   const max = action.max ?? 100;
-  const value = action.value ?? min;
+
+  // Local state tracks the visual position while dragging
+  // Only sends to backend on release
+  const [localValue, setLocalValue] = useState(action.value ?? min);
+
+  // Keep in sync if backend pushes a new value externally
+  useEffect(() => {
+    if (action.value != null) setLocalValue(action.value);
+  }, [action.value]);
 
   return (
     <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-2">
@@ -123,16 +131,20 @@ function SliderControl({ action, deviceId, isOnline, onAction }) {
           {action.label}
         </span>
         <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-          {value} / {max}
+          {localValue} / {max}
         </span>
       </div>
       <input
         type="range"
         min={min}
         max={max}
-        value={value}
+        value={localValue}
         disabled={!isOnline}
-        onChange={(e) => onAction(deviceId, action.id, Number(e.target.value))}
+        onChange={(e) => setLocalValue(Number(e.target.value))} // only updates UI
+        onPointerUp={(e) =>
+          onAction(deviceId, action.id, Number(e.target.value))
+        } // sends to backend
+        onTouchEnd={(e) => onAction(deviceId, action.id, localValue)} // same as pointerup but for mobile if we use website from phone
         className={`
           w-full accent-indigo-600
           ${!isOnline ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
