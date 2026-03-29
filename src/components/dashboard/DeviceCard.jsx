@@ -144,7 +144,6 @@ function SliderControl({ action, deviceId, isOnline, onAction }) {
         onPointerUp={(e) =>
           onAction(deviceId, action.id, Number(e.target.value))
         } // sends to backend
-        onTouchEnd={(e) => onAction(deviceId, action.id, localValue)} // same as pointerup but for mobile if we use website from phone
         className={`
           w-full accent-indigo-600
           ${!isOnline ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
