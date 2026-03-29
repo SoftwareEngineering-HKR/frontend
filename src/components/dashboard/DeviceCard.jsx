@@ -109,7 +109,6 @@ function ToggleControl({ action, deviceId, isOnline, onAction }) {
   );
 }
 
-// Still havent tested if it works :)
 // Slider — for the fan speed
 function SliderControl({ action, deviceId, isOnline, onAction }) {
   const min = action.min ?? 0;

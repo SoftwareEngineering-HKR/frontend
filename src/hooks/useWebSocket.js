@@ -120,6 +120,8 @@ export function useWebSocket(isLoggedIn) {
                         return { ...a, value: content === 1 ? 1 : 0 };
                       if (a.type === "slider")
                         return { ...a, value: Number(content) };
+                      if (a.type === "sensor")
+                        return { ...a, value: Number(content) };
                       return a; // for sensors, as we only read values from them
                     }),
                   }
