@@ -1,155 +1,10 @@
-// Will probably puts the different control types in separate files later
+import { deviceIcons } from "./deviceIcons";
+import ToggleControl from "./ActionControls/ToggleControl";
+import SliderControl from "./ActionControls/SliderControl";
+import SensorDisplay from "./ActionControls/SensorDisplay";
 import Schedule from "./Schedule";
 import { useState, useEffect } from "react";
-import {
-  Lightbulb,
-  Fan,
-  Wifi,
-  WifiOff,
-  Trash2,
-  Flame,
-  Droplets,
-  DoorOpen,
-  Volume2,
-  Wind,
-  Calculator,
-  Activity, // motion icon for now, might change later
-  Squircle,
-} from "lucide-react";
-
-const deviceIcons = {
-  light: Lightbulb,
-  fan: Fan,
-  gas: Flame,
-  humidity: Droplets,
-  steam: Wind,
-  servo: DoorOpen, // door for now
-  buzz: Volume2,
-  motion: Activity,
-  button: Squircle,
-};
-
-// Still havent tested if it works :)
-// Sensor display —> only reads the value from backend, no user interaction
-function SensorDisplay({ action }) {
-  const { label, value, min, max } = action;
-
-  const hasRange = min != null && max != null && max !== min;
-  const percent = hasRange
-    ? Math.round((((value ?? min) - min) / (max - min)) * 100)
-    : null;
-
-  return (
-    <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-1.5">
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {label}
-        </span>
-        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-          {value ?? "—"}
-          {max != null && max > 1 && (
-            <span className="text-gray-400 font-normal"> / {max}</span>
-          )}
-        </span>
-      </div>
-      {hasRange && (
-        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-          <div
-            className="bg-indigo-500 h-1.5 rounded-full transition-all duration-500"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Toggle — on/off (light, buzz), open/closed (servo)
-function ToggleControl({ action, deviceId, isOnline, onAction }) {
-  const isOn = action.value === 1 || action.value === true;
-
-  // Servo shows Open/Closed label instead of On/Off
-  const onLabel =
-    action.id === "servo" || action.label === "Servo" ? "Open" : "On";
-  const offLabel =
-    action.id === "servo" || action.label === "Servo" ? "Closed" : "Off";
-
-  return (
-    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-      <div className="flex flex-col">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {action.label}
-        </span>
-        <span className="text-xs text-gray-400">
-          {isOn ? onLabel : offLabel}
-        </span>
-      </div>
-      <button
-        onClick={() => onAction(deviceId, action.id, isOn ? 0 : 1)}
-        disabled={!isOnline}
-        className={`
-          relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-          ${!isOnline ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-          ${isOn ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-600"}
-        `}
-      >
-        <span
-          className={`
-            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-            ${isOn ? "translate-x-6" : "translate-x-1"}
-          `}
-        />
-      </button>
-    </div>
-  );
-}
-
-// Slider — for the fan speed
-function SliderControl({ action, deviceId, isOnline, onAction }) {
-  const min = action.min ?? 0;
-  const max = action.max ?? 100;
-
-  // Local state tracks the visual position while dragging
-  // Only sends to backend on release
-  const [localValue, setLocalValue] = useState(action.value ?? min);
-
-  // Keep in sync if backend pushes a new value externally
-  useEffect(() => {
-    if (action.value != null) setLocalValue(action.value);
-  }, [action.value]);
-
-  return (
-    <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-2">
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {action.label}
-        </span>
-        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-          {localValue} / {max}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={localValue}
-        disabled={!isOnline}
-        onChange={(e) => setLocalValue(Number(e.target.value))} // only updates UI
-        onPointerUp={(e) =>
-          onAction(deviceId, action.id, Number(e.target.value))
-        } // sends to backend
-        className={`
-          w-full accent-indigo-600
-          ${!isOnline ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-        `}
-      />
-      <div className="flex justify-between text-xs text-gray-400">
-        <span>{min}</span>
-        <span>{max}</span>
-      </div>
-    </div>
-  );
-}
+import { Wifi, WifiOff, Trash2, Calculator } from "lucide-react";
 
 export default function DeviceCard(props) {
   const { device } = props;
@@ -220,7 +75,7 @@ export default function DeviceCard(props) {
         {/* Controls */}
         <div className="space-y-2">
           {device.actions.map((action) => {
-            if (action.type === "toggle") {
+            if (action.type === "toggle")
               return (
                 <ToggleControl
                   key={action.id}
@@ -230,11 +85,9 @@ export default function DeviceCard(props) {
                   onAction={props.onAction}
                 />
               );
-            }
-            if (action.type === "sensor") {
+            if (action.type === "sensor")
               return <SensorDisplay key={action.id} action={action} />;
-            }
-            if (action.type === "slider") {
+            if (action.type === "slider")
               return (
                 <SliderControl
                   key={action.id}
@@ -244,7 +97,6 @@ export default function DeviceCard(props) {
                   onAction={props.onAction}
                 />
               );
-            }
             return null;
           })}
         </div>
