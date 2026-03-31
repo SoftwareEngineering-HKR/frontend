@@ -92,7 +92,7 @@ export function useWebSocket(isLoggedIn) {
       let message;
       try {
         message = JSON.parse(event.data);
-        onsole.log("WS PARSED:", message);
+        console.log("WS PARSED:", message);
       } catch {
         console.error("Failed to parse WebSocket message:", event.data);
         return;
