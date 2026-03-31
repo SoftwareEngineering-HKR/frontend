@@ -12,7 +12,8 @@ function App() {
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [actionError, setActionError] = useState(null); // for WS action errors
-  // Connects when logged in, disconnects on logout -> need to change with proper login/logout/token stuff
+  // Connects when logged in, disconnects on logout
+  //  -> need to change with proper login once that is implemented in the backend
   const { devices, connectionStatus, wsError, sendDeviceUpdate } =
     useWebSocket(!!currentUser);
 
@@ -24,6 +25,7 @@ function App() {
   const handleDeviceAction = async (deviceId, actionId, value) => {
     if (!currentUser) return;
 
+    // Connvert boolean to number for easier handling in the backend, as all devices expect numeric values
     const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
 
     try {
@@ -184,7 +186,7 @@ function App() {
         onCancel={closeConfirm}
       />
 
-      {/* Shows WebSocket errors like idk device timeout, access denied, and so on? */}
+      {/* Shows WebSocket errors like device timeout, access denied, ... */}
       {(actionError || wsError) && (
         <Toast
           message={actionError ?? wsError}
