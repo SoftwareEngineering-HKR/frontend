@@ -3,35 +3,30 @@ import Schedule from "./Schedule";
 import { useState, useEffect } from "react";
 import {
   Lightbulb,
-  Thermometer,
-  Lock,
-  Camera,
-  Wind,
-  Coffee,
   Fan,
-  Speaker,
   Wifi,
   WifiOff,
   Trash2,
   Flame,
   Droplets,
-  Wind as Steam,
   DoorOpen,
   Volume2,
+  Wind,
+  Calculator,
+  Activity, // motion icon for now, might change later
+  Squircle,
 } from "lucide-react";
 
 const deviceIcons = {
   light: Lightbulb,
-  thermostat: Thermometer,
-  lock: Lock,
-  camera: Camera,
   fan: Fan,
-  speaker: Speaker,
   gas: Flame,
   humidity: Droplets,
-  steam: Steam,
-  servo: DoorOpen,
+  steam: Wind,
+  servo: DoorOpen, // door for now
   buzz: Volume2,
+  motion: Activity,
+  button: Squircle,
 };
 
 // Still havent tested if it works :)
@@ -69,15 +64,15 @@ function SensorDisplay({ action }) {
   );
 }
 
-// Toggle — on/off (light, buzz), open/closed (door for now)
+// Toggle — on/off (light, buzz), open/closed (servo)
 function ToggleControl({ action, deviceId, isOnline, onAction }) {
   const isOn = action.value === 1 || action.value === true;
 
-  // Servo (door) shows Open/Closed label instead of On/Off
+  // Servo shows Open/Closed label instead of On/Off
   const onLabel =
-    action.id === "servo" || action.label === "Door" ? "Open" : "On";
+    action.id === "servo" || action.label === "Servo" ? "Open" : "On";
   const offLabel =
-    action.id === "servo" || action.label === "Door" ? "Closed" : "Off";
+    action.id === "servo" || action.label === "Servo" ? "Closed" : "Off";
 
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -158,7 +153,7 @@ function SliderControl({ action, deviceId, isOnline, onAction }) {
 
 export default function DeviceCard(props) {
   const { device } = props;
-  const Icon = deviceIcons[device.type] ?? Wind; // just fallback icon, will probably change later
+  const Icon = deviceIcons[device.type] ?? Calculator; // just fallback icon
 
   return (
     <div
