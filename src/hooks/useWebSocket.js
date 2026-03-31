@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
+// const WS_URL = "ws://192.168.50.207:8080";
 const WS_URL = "ws://localhost:8080";
 
 // How long to wait for a device to confirm a state change before showing an error
 const UPDATE_TIMEOUT_MS = 5000;
 
 const TOGGLE_TYPES = ["light", "buzz", "servo"]; // servo is both door and window, so not sure how to deal with that yet, but it does have a toggle action :)️
-const SENSOR_TYPES = ["gas", "steam", "humidity"];
+const SENSOR_TYPES = ["gas", "steam", "humidity", "motion", "button"]; // button sends if it is pressed or not
 const SLIDER_TYPES = ["fan"];
 
 // Map backend device format to our components
@@ -30,21 +31,24 @@ function mapBackendDevice(d) {
     max: maxValue,
   };
 
-  // Label varies by device type
+  // Labels we use by device type
   const labels = {
     light: "Power",
     buzz: "Buzzer",
-    servo: "Door", // door for now :)))
+    servo: "Servo",
     gas: "Gas Level",
     steam: "Steam Level",
     humidity: "Humidity",
+    motion: "Motion",
+    button: "Button",
     fan: "Fan Speed",
   };
   action.label = labels[d.type] ?? d.type;
 
+  // The device we return to use in the frontend
   return {
     id: d.id,
-    name: d.name ?? d.id,
+    name: d.name ?? `${d.type} (${d.id})`,
     type: d.type,
     isOnline: d.online,
     room: d.room ?? "Unassigned",
@@ -59,8 +63,12 @@ export function useWebSocket(isLoggedIn) {
 
   const wsRef = useRef(null);
   // Tracks in-flight update commands: deviceId -> { timerId, resolve, reject }
+  // If the backend confirms the update with an "update value" message, we call resolve() and clear the timeout
+  // If we get an "action response" error message or the timeout triggers, we call reject() and clear the pending command
   const pendingRef = useRef({});
 
+  // When user logs in, it connects to WS; on logout, it disconnects
+  //  -> need to change with proper login once that is implemented in the backend
   useEffect(() => {
     if (!isLoggedIn) {
       wsRef.current?.close();
@@ -84,7 +92,7 @@ export function useWebSocket(isLoggedIn) {
       let message;
       try {
         message = JSON.parse(event.data);
-        console.log("WS PARSED:", message);
+        onsole.log("WS PARSED:", message);
       } catch {
         console.error("Failed to parse WebSocket message:", event.data);
         return;
@@ -97,7 +105,7 @@ export function useWebSocket(isLoggedIn) {
           break;
         }
 
-        // Backend sends this when a device actually changes state (confirmation of success)
+        // Backend sends this when a device actually changes state
         case "update value": {
           const { deviceID, content } = message.payload;
 
@@ -122,7 +130,7 @@ export function useWebSocket(isLoggedIn) {
                         return { ...a, value: Number(content) };
                       if (a.type === "sensor")
                         return { ...a, value: Number(content) };
-                      return a; // for sensors, as we only read values from them
+                      return a;
                     }),
                   }
                 : d,
@@ -181,7 +189,7 @@ export function useWebSocket(isLoggedIn) {
         }),
       );
 
-      // If no "update value" comes back within the timeout, assume the device failed
+      // If no "update value" comes back within the timeout, assume device failed
       const timerId = setTimeout(() => {
         delete pendingRef.current[deviceId];
         reject(new Error("Device did not respond in time"));

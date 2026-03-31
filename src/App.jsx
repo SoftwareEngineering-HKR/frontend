@@ -12,43 +12,13 @@ function App() {
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [actionError, setActionError] = useState(null); // for WS action errors
-  // Connects when logged in, disconnects on logout -> might need to change with proper login/logout/token stuff
+  // Connects when logged in, disconnects on logout -> need to change with proper login/logout/token stuff
   const { devices, connectionStatus, wsError, sendDeviceUpdate } =
     useWebSocket(!!currentUser);
 
   const handleLogout = () => {
     setCurrentUser(null);
   };
-
-  // Will be removed later
-  /* const handleDeviceAction = (deviceId, actionId, value) => {
-    if (!currentUser) return;
-
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => {
-        // Using email for now, later use id when backend is implemented
-        if (user.email === currentUser.email) {
-          return {
-            ...user,
-            devices: user.devices.map((device) => {
-              if (device.id === deviceId) {
-                return {
-                  ...device,
-                  actions: device.actions.map((action) =>
-                    action.id === actionId && action.type === "toggle"
-                      ? { ...action, value }
-                      : action,
-                  ),
-                };
-              }
-              return device;
-            }),
-          };
-        }
-        return user;
-      }),
-    );
-  }; */
 
   // Need to fix the value part later for different action types
   const handleDeviceAction = async (deviceId, actionId, value) => {
