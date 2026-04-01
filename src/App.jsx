@@ -14,7 +14,7 @@ function App() {
   const [actionError, setActionError] = useState(null); // for WS action errors
   // Connects when logged in, disconnects on logout
   //  -> need to change with proper login once that is implemented in the backend
-  const { devices, connectionStatus, wsError, sendDeviceUpdate } =
+  const { devices, connectionStatus, wsError, sendMessage } =
     useWebSocket(!!currentUser);
 
   const handleLogout = () => {
@@ -29,7 +29,7 @@ function App() {
     const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
 
     try {
-      await sendDeviceUpdate(deviceId, numericValue);
+      await sendMessage("update value", { deviceId, value: numericValue });
     } catch (error) {
       setActionError(error.message);
     }

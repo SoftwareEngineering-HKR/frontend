@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { mapBackendDevice } from "./deviceMapping";
 import { HANDLERS } from "./messageHandlers";
+import { BUILDERS } from "./messageBuilders";
 
 // const WS_URL = "ws://192.168.50.207:8080";
 const WS_URL = "ws://localhost:8080";
@@ -15,8 +16,8 @@ export function useWebSocket(isLoggedIn) {
 
   const wsRef = useRef(null);
   // Tracks in-flight update commands: deviceId -> { timerId, resolve, reject }
-  // If the backend confirms the update with an "update value" message, we call resolve() and clear the timeout
-  // If we get an "action response" error message or the timeout triggers, we call reject() and clear the pending command
+  // If the backend confirms the update with an "update value" message (from handler), we call resolve() and clear the timeout
+  // If we get an "action response" error message (from handler) or the timeout triggers, we call reject() and clear the pending command
   const pendingRef = useRef({});
 
   // When user logs in, it connects to WS; on logout, it disconnects
@@ -73,32 +74,36 @@ export function useWebSocket(isLoggedIn) {
     };
   }, [isLoggedIn]);
 
-  // Sends a device update command and returns a promise that resolves/rejects based on the response
-  // - resolves when the backend confirms the change with "update value"
-  // - rejects if there's an error response or the device doesn't respond in time
-  const sendDeviceUpdate = useCallback((deviceId, value) => {
+  const sendMessage = useCallback((type, params) => {
     return new Promise((resolve, reject) => {
       if (wsRef.current?.readyState !== WebSocket.OPEN) {
         reject(new Error("Not connected to server"));
         return;
       }
 
-      wsRef.current.send(
-        JSON.stringify({
-          type: "update value",
-          payload: { id: deviceId, value },
-        }),
-      );
+      const builder = BUILDERS[type];
+      if (!builder) {
+        reject(new Error(`No builder registered for message type: "${type}"`));
+        return;
+      }
 
-      // If no "update value" comes back within the timeout, assume device failed
-      const timerId = setTimeout(() => {
-        delete pendingRef.current[deviceId];
-        reject(new Error("Device did not respond in time"));
-      }, UPDATE_TIMEOUT_MS);
+      wsRef.current.send(JSON.stringify(builder(params)));
 
-      pendingRef.current[deviceId] = { timerId, resolve, reject };
+      // Only set up a timeout for messages that expect a confirmation back from a device.
+      // For device updates, if no "update value" comes back within the timeout, we assume the device failed.
+      // Other messages (like room or device management) don't have backend responses yet,
+      // so we resolve them immediately for now and can change when/if the backend implements those.
+      if (params.deviceId) {
+        const timerId = setTimeout(() => {
+          delete pendingRef.current[params.deviceId];
+          reject(new Error("Device did not respond in time"));
+        }, UPDATE_TIMEOUT_MS);
+        pendingRef.current[params.deviceId] = { timerId, resolve, reject };
+      } else {
+        resolve();
+      }
     });
   }, []);
 
-  return { devices, connectionStatus, wsError, sendDeviceUpdate };
+  return { devices, connectionStatus, wsError, sendMessage };
 }
