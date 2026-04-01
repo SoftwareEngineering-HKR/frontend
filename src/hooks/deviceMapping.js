@@ -28,10 +28,13 @@ export function mapBackendDevice(d) {
   else if (SLIDER_TYPES.includes(d.type)) actionType = "slider";
   else actionType = "unknown";
 
+  // Capitalize first letter for display of the type if name is missing
+  const displayType = d.type.charAt(0).toUpperCase() + d.type.slice(1);
+
   // The device we return to use in the frontend
   return {
     id: d.id,
-    name: d.name ?? `${d.type} (${d.id})`,
+    name: d.name ?? `${displayType} (${d.id})`,
     type: d.type,
     isOnline: d.online,
     room: d.room ?? "Unassigned",
