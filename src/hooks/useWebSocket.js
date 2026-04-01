@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { mapBackendDevice } from "./deviceMapping";
+import { HANDLERS } from "./messageHandlers";
 
 // const WS_URL = "ws://192.168.50.207:8080";
 const WS_URL = "ws://localhost:8080";
@@ -49,62 +50,11 @@ export function useWebSocket(isLoggedIn) {
         return;
       }
 
-      switch (message.type) {
-        // Backend sends this once on connect — the full device list for this user
-        case "inital devices": {
-          setDevices(message.payload.devices.map(mapBackendDevice));
-          break;
-        }
-
-        // Backend sends this when a device actually changes state
-        case "update value": {
-          const { deviceID, content } = message.payload;
-
-          // Resolve the pending promise for this device, if it exists
-          const pending = pendingRef.current[deviceID];
-          if (pending) {
-            clearTimeout(pending.timerId);
-            pending.resolve();
-            delete pendingRef.current[deviceID];
-          }
-
-          // Update that device in state
-          setDevices((prev) =>
-            prev.map((d) =>
-              d.id === deviceID
-                ? {
-                    ...d,
-                    actions: d.actions.map((a) => {
-                      if (a.type === "toggle")
-                        return { ...a, value: content === 1 ? 1 : 0 };
-                      if (a.type === "slider")
-                        return { ...a, value: Number(content) };
-                      if (a.type === "sensor")
-                        return { ...a, value: Number(content) };
-                      return a;
-                    }),
-                  }
-                : d,
-            ),
-          );
-          break;
-        }
-
-        // Backend sends this on 403/500 errors related to an action command
-        case "action response": {
-          const { message: errorMsg } = message.payload;
-          Object.keys(pendingRef.current).forEach((deviceId) => {
-            const p = pendingRef.current[deviceId];
-            clearTimeout(p.timerId);
-            p.reject(new Error(errorMsg));
-            delete pendingRef.current[deviceId];
-          });
-          setWsError(errorMsg);
-          break;
-        }
-
-        default:
-          console.warn("Unknown WebSocket message type:", message.type);
+      const handler = HANDLERS[message.type];
+      if (handler) {
+        handler(message.payload, { setDevices, setWsError, pendingRef });
+      } else {
+        console.warn("Unknown WebSocket message type:", message.type);
       }
     };
 
