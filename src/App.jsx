@@ -285,7 +285,11 @@ function App() {
           path="/admin"
           element={
             currentUser && currentUserData.role === "admin" ? (
-              <AdminPanel/>
+              <AdminPanel
+                users={users}
+                currentUser={currentUserData}
+                onUsersChange={setUsers}
+              />
             ) : (
               <Navigate to="/authentication" />
             )
