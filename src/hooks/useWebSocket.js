@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { mapBackendDevice } from "./deviceMapping";
-import { HANDLERS } from "./messageHandlers";
-import { BUILDERS } from "./messageBuilders";
+import { HANDLERS } from "./wsMessages/messageHandlers";
+import { BUILDERS } from "./wsMessages/messageBuilders";
 
 // const WS_URL = "ws://192.168.50.207:8080";
 const WS_URL = "ws://localhost:8080";
