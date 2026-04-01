@@ -289,6 +289,7 @@ function App() {
                 users={users}
                 currentUser={currentUserData}
                 onUsersChange={setUsers}
+                onLogout={handleLogout}
               />
             ) : (
               <Navigate to="/authentication" />

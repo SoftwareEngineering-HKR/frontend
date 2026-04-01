@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, LayoutDashboard } from "lucide-react";
 
-export default function AdminPanel({ users, currentUser, onUsersChange }) {
+export default function AdminPanel({ users, currentUser, onUsersChange, onLogout }) {
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [toast, setToast] = useState(null);
@@ -81,11 +81,12 @@ export default function AdminPanel({ users, currentUser, onUsersChange }) {
                 title="Admin Panel"
                 subtitle={`${users.length} total user(s) · ${admins.length} admin(s)`}
                 icon={<Settings className="w-6 h-6 text-white"/>}
+                onLogout={onLogout}
                 actions={
                     <Button
                         text="Back to Overview"
                         icon={<LayoutDashboard className="w-4 h-4"/>}
-                        onClick={() => navigate("//overview")}
+                        onClick={() => navigate("/overview")}
                         variant="ghost"
                     />
                 }
