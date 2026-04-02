@@ -3,40 +3,170 @@ import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
 import { useState } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
-import Toast from "./components/common/Toast.jsx";
-import { useWebSocket } from "./hooks/useWebSocket.js";
+
+// Mock initial devices
+const initialDevices = [
+  {
+    id: "1",
+    name: "Living Room Light",
+    type: "light",
+    isOnline: true,
+    room: "Living Room",
+    schedule: {
+      enabled: true,
+      days: ["monday", "wednesday", "friday"],
+      startTime: "16:00",
+      endTime: "22:00",
+    },
+    actions: [{ id: "power", label: "Power", type: "toggle", value: true }],
+  },
+  {
+    id: "2",
+    name: "Bedroom Light",
+    type: "light",
+    isOnline: true,
+    room: "Bedroom",
+    actions: [{ id: "power", label: "Power", type: "toggle", value: false }],
+  },
+  {
+    id: "3",
+    name: "Main Thermostat",
+    type: "thermostat",
+    isOnline: true,
+    room: "Living Room",
+    actions: [{ id: "power", label: "Power", type: "toggle", value: true }],
+  },
+  {
+    id: "4",
+    name: "Front Door Lock",
+    type: "lock",
+    isOnline: false,
+    room: "Entrance",
+    actions: [
+      { id: "lock", label: "Lock", type: "button" },
+      { id: "unlock", label: "Unlock", type: "button" },
+    ],
+  },
+  {
+    id: "5",
+    name: "Security Camera",
+    type: "camera",
+    isOnline: true,
+    room: "Front Yard",
+    actions: [
+      { id: "power", label: "Power", type: "toggle", value: true },
+      { id: "record", label: "Start Recording", type: "button" },
+    ],
+  },
+  {
+    id: "6",
+    name: "Kitchen Window",
+    type: "window",
+    isOnline: true,
+    room: "Kitchen",
+    actions: [
+      { id: "open", label: "Open", type: "button" },
+      { id: "close", label: "Close", type: "button" },
+    ],
+  },
+  {
+    id: "7",
+    name: "Coffee Maker",
+    type: "coffee-machine",
+    isOnline: true,
+    room: "Kitchen",
+    actions: [
+      { id: "power", label: "Power", type: "toggle", value: false },
+      { id: "brew", label: "Brew Coffee", type: "button" },
+      { id: "clean", label: "Clean Cycle", type: "button" },
+    ],
+  },
+  {
+    id: "8",
+    name: "Ceiling Fan",
+    type: "fan",
+    isOnline: false,
+    room: "Bedroom",
+    actions: [{ id: "power", label: "Power", type: "toggle", value: false }],
+  },
+  {
+    id: "9",
+    name: "Smart Speaker",
+    type: "speaker",
+    isOnline: true,
+    room: "Living Room",
+    actions: [{ id: "power", label: "Power", type: "toggle", value: true }],
+  },
+];
+
+// Mock some users
+const initialUsers = [
+  {
+    id: "user-1",
+    name: "John Doe",
+    email: "user@example.com",
+    role: "user",
+    devices: initialDevices.slice(0, 5),
+  },
+  {
+    id: "user-2",
+    name: "Jane Smith",
+    email: "jane@example.com",
+    role: "user",
+    devices: initialDevices.slice(5),
+  },
+  {
+    id: "admin-1",
+    name: "Admin",
+    email: "admin@example.com",
+    role: "admin",
+    devices: initialDevices.slice(5),
+  },
+];
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState(initialUsers);
+  // This will probably match with the backend for later
+  // const currentUserData = users.find((u) => u.id === currentUser?.id);
+  const currentUserData = users.find((u) => u.email === currentUser?.email);
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
-  const [actionError, setActionError] = useState(null); // for WS action errors
-  // Connects when logged in, disconnects on logout
-  //  -> need to change with proper login once that is implemented in the backend
-  const { devices, connectionStatus, wsError, sendMessage } =
-    useWebSocket(!!currentUser);
 
   const handleLogout = () => {
     setCurrentUser(null);
   };
 
-  // Need to fix the value part later for different action types
-  const handleDeviceAction = async (deviceId, actionId, value) => {
+  const handleDeviceAction = (deviceId, actionId, value) => {
     if (!currentUser) return;
 
-    // Connvert boolean to number for easier handling in the backend, as all devices expect numeric values
-    const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
-
-    try {
-      await sendMessage("update value", { deviceId, value: numericValue });
-    } catch (error) {
-      setActionError(error.message);
-    }
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        // Using email for now, later use id when backend is implemented
+        if (user.email === currentUser.email) {
+          return {
+            ...user,
+            devices: user.devices.map((device) => {
+              if (device.id === deviceId) {
+                return {
+                  ...device,
+                  actions: device.actions.map((action) =>
+                    action.id === actionId && action.type === "toggle"
+                      ? { ...action, value }
+                      : action,
+                  ),
+                };
+              }
+              return device;
+            }),
+          };
+        }
+        return user;
+      }),
+    );
   };
 
-  // Will be removed later
-  /*
   const handleRemoveDevice = (deviceId) => {
     if (!currentUser) return;
 
@@ -101,29 +231,6 @@ function App() {
         return user;
       }),
     );
-  }; */
-
-  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
-  const handleRemoveDevice = (deviceId) => {
-    openConfirm({
-      title: "Remove Device",
-      message: "Removing devices is not yet supported.",
-      onConfirm: closeConfirm,
-    });
-  };
-
-  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
-  const handleAddDevice = (newDevice) => {
-    console.log("Add device not yet supported by backend", newDevice);
-  };
-
-  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
-  const handleScheduleUpdate = (deviceId, schedule) => {
-    console.log(
-      "Schedule update not yet supported by backend",
-      deviceId,
-      schedule,
-    );
   };
 
   const openConfirm = ({ title, message, onConfirm }) => {
@@ -159,14 +266,13 @@ function App() {
           element={
             currentUser ? (
               <Overview
-                devices={devices}
-                connectionStatus={connectionStatus}
+                devices={currentUserData?.devices || []}
                 onLogout={handleLogout}
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
                 onAddDevice={handleAddDevice}
                 onScheduleUpdate={handleScheduleUpdate}
-                isAdmin={false} // Will need to be implemented properly when backend is ready
+                isAdmin={currentUserData?.role === "admin"}
               />
             ) : (
               <Navigate to="/authentication" />
@@ -185,16 +291,6 @@ function App() {
         onConfirm={confirmDialog?.onConfirm}
         onCancel={closeConfirm}
       />
-
-      {/* Shows WebSocket errors like device timeout, access denied, ... */}
-      {(actionError || wsError) && (
-        <Toast
-          message={actionError ?? wsError}
-          onDismiss={() => {
-            setActionError(null);
-          }}
-        />
-      )}
     </>
   );
 }
