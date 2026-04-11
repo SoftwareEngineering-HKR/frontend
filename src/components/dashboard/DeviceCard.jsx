@@ -101,6 +101,7 @@ export default function DeviceCard(props) {
           })}
         </div>
         {/* Scheduling */}
+        {/*
         <Schedule
           schedule={device.schedule}
           isOnline={device.isOnline}
@@ -108,6 +109,7 @@ export default function DeviceCard(props) {
             props.onScheduleUpdate?.(device.id, newSchedule)
           }
         />
+        */}
       </div>
     </div>
   );
