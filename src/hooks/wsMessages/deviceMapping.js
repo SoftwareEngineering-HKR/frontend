@@ -1,6 +1,6 @@
 const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window"];
-const SENSOR_TYPES = ["gas", "steam", "humidity", "motion"];
-const BINARY_SENSOR_TYPES = ["button", "photo"];
+const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness"];
+const BINARY_SENSOR_TYPES = ["button", "photo", "tilt", "motion"];
 const ALL_SENSOR_TYPES = [...SENSOR_TYPES, ...BINARY_SENSOR_TYPES];
 const SLIDER_TYPES = ["fan"];
 
@@ -18,6 +18,8 @@ const DEVICE_LABELS = {
   door: "Door",
   window: "Window",
   photo: "Photo Sensor",
+  tilt: "Tilt",
+  brightness: "Brightness",
 };
 
 // Map backend device format to our components

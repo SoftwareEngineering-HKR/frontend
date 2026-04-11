@@ -1,6 +1,6 @@
 // Binary sensor only has 0 or 1 value (used for buttons, motion, and so on)
 function BinarySensorDisplay({ label, value, detectedText, clearText }) {
-  const isActive = value === 1;
+  const isActive = value > 0; // active if it is 1, but motion sends anything above 0 for detected
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -58,6 +58,8 @@ function RangeSensorDisplay({ label, value, min, max }) {
 const BINARY_LABELS = {
   photo: { detected: "Detected", clear: "Clear" },
   button: { detected: "Pressed", clear: "Released" },
+  motion: { detected: "Motion Detected", clear: "No Motion" },
+  tilt: { detected: "Tilted", clear: "Horizontal" },
 };
 
 const BINARY_FALLBACK = { detected: "Active", clear: "Inactive" };
