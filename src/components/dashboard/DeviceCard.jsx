@@ -86,7 +86,13 @@ export default function DeviceCard(props) {
                 />
               );
             if (action.type === "sensor")
-              return <SensorDisplay key={action.id} action={action} />;
+              return (
+                <SensorDisplay
+                  key={action.id}
+                  action={action}
+                  deviceType={device.type}
+                />
+              );
             if (action.type === "slider")
               return (
                 <SliderControl

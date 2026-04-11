@@ -10,6 +10,7 @@ import {
   DoorClosed,
   Grid2X2,
   Scan,
+  Camera,
 } from "lucide-react";
 
 export const deviceIcons = {
@@ -24,4 +25,5 @@ export const deviceIcons = {
   button: Squircle,
   door: DoorClosed,
   window: Grid2X2,
+  photo: Camera,
 };
