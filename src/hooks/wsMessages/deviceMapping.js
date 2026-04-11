@@ -1,4 +1,4 @@
-const TOGGLE_TYPES = ["light", "buzz", "servo"]; // servo is both door and window, so not sure how to deal with that yet, but it does have a toggle action :)️
+const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window"];
 const SENSOR_TYPES = ["gas", "steam", "humidity", "motion", "button"]; // button sends if it is pressed or not
 const SLIDER_TYPES = ["fan"];
 
@@ -13,6 +13,8 @@ const DEVICE_LABELS = {
   motion: "Motion",
   button: "Button",
   fan: "Fan Speed",
+  door: "Door",
+  window: "Window",
 };
 
 // Map backend device format to our components
