@@ -288,6 +288,7 @@ function App() {
               <AdminPanel
                 users={users}
                 currentUser={currentUserData}
+                allDevices={initialDevices}
                 onUsersChange={setUsers}
                 onLogout={handleLogout}
               />
