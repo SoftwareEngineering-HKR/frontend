@@ -86,7 +86,13 @@ export default function DeviceCard(props) {
                 />
               );
             if (action.type === "sensor")
-              return <SensorDisplay key={action.id} action={action} />;
+              return (
+                <SensorDisplay
+                  key={action.id}
+                  action={action}
+                  deviceType={device.type}
+                />
+              );
             if (action.type === "slider")
               return (
                 <SliderControl
@@ -101,6 +107,7 @@ export default function DeviceCard(props) {
           })}
         </div>
         {/* Scheduling */}
+        {/*
         <Schedule
           schedule={device.schedule}
           isOnline={device.isOnline}
@@ -108,6 +115,7 @@ export default function DeviceCard(props) {
             props.onScheduleUpdate?.(device.id, newSchedule)
           }
         />
+        */}
       </div>
     </div>
   );

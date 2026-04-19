@@ -1,6 +1,6 @@
 import React from "react";
 
-// Toggle — on/off (light, buzz), open/closed (servo)
+// Toggle — on/off (light, buzz), open/closed (servo, door, window)
 export default function ToggleControl({
   action,
   deviceId,
@@ -9,11 +9,13 @@ export default function ToggleControl({
 }) {
   const isOn = action.value === 1 || action.value === true;
 
-  // Servo shows Open/Closed label instead of On/Off
-  const onLabel =
-    action.id === "servo" || action.label === "Servo" ? "Open" : "On";
-  const offLabel =
-    action.id === "servo" || action.label === "Servo" ? "Closed" : "Off";
+  const isOpenCloseType =
+    ["servo", "door", "window"].includes(action.id?.toLowerCase()) ||
+    ["servo", "door", "window"].includes(action.label?.toLowerCase());
+
+  // Servo/Door/Window shows Open/Closed label instead of On/Off
+  const onLabel = isOpenCloseType ? "Open" : "On";
+  const offLabel = isOpenCloseType ? "Closed" : "Off";
 
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">

@@ -3,11 +3,16 @@ import {
   Fan,
   Flame,
   Droplets,
-  DoorOpen,
   Volume2,
   Wind,
-  Activity, // motion icon for now, might change later
+  Activity,
   Squircle,
+  DoorClosed,
+  Grid2X2,
+  Scan,
+  Camera,
+  Sun,
+  Move,
 } from "lucide-react";
 
 export const deviceIcons = {
@@ -16,8 +21,13 @@ export const deviceIcons = {
   gas: Flame,
   humidity: Droplets,
   steam: Wind,
-  servo: DoorOpen, // door for now
+  servo: Scan, // no perfect icon for servo, using scan as a placeholder
   buzz: Volume2,
-  motion: Activity,
+  motion: Move,
   button: Squircle,
+  door: DoorClosed,
+  window: Grid2X2,
+  photo: Camera,
+  tilt: Activity,
+  brightness: Sun,
 };

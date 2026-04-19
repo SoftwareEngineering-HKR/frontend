@@ -1,9 +1,29 @@
-import React from "react";
+// Binary sensor only has 0 or 1 value (used for buttons, motion, and so on)
+function BinarySensorDisplay({ label, value, detectedText, clearText }) {
+  const isActive = value > 0; // active if it is 1, but motion sends anything above 0 for detected
+  return (
+    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {label}
+      </span>
+      <span
+        className={`
+          text-sm font-semibold px-2 py-0.5 rounded-full
+          ${
+            isActive
+              ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+              : "bg-gray-200 text-gray-500 dark:bg-gray-600 dark:text-gray-400"
+          }
+        `}
+      >
+        {value == null ? "—" : isActive ? detectedText : clearText}
+      </span>
+    </div>
+  );
+}
 
-// Sensor display —> only reads the value from backend, no user interaction
-export default function SensorDisplay({ action }) {
-  const { label, value, min, max } = action;
-
+// Range sensor (for gas, steam, humidity, and so on)
+function RangeSensorDisplay({ label, value, min, max }) {
   const hasRange = min != null && max != null && max !== min;
   const percent = hasRange
     ? Math.round((((value ?? min) - min) / (max - min)) * 100)
@@ -32,4 +52,32 @@ export default function SensorDisplay({ action }) {
       )}
     </div>
   );
+}
+
+// 1 means active, 0 means inactive
+const BINARY_LABELS = {
+  photo: { detected: "Detected", clear: "Clear" },
+  button: { detected: "Pressed", clear: "Released" },
+  motion: { detected: "Motion Detected", clear: "No Motion" },
+  tilt: { detected: "Tilted", clear: "Horizontal" },
+};
+
+const BINARY_FALLBACK = { detected: "Active", clear: "Inactive" };
+
+export default function SensorDisplay({ action, deviceType }) {
+  const { label, value, min, max, variant } = action;
+
+  if (variant === "binary") {
+    const { detected, clear } = BINARY_LABELS[deviceType] ?? BINARY_FALLBACK;
+    return (
+      <BinarySensorDisplay
+        label={label}
+        value={value}
+        detectedText={detected}
+        clearText={clear}
+      />
+    );
+  }
+
+  return <RangeSensorDisplay label={label} value={value} min={min} max={max} />;
 }
