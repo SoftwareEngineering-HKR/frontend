@@ -8,7 +8,7 @@ export default function UserNameplate({ user, onUpgrade, onDowngrade, onDelete, 
     return (
         <>
         <div
-            className="flex min-h-20 justify-between gap-4 px-5 py-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm
+            className="flex min-h-16 justify-between gap-4 px-5 py-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm
             hover:shadow-md hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
             onClick={onClick}
         >
@@ -27,7 +27,7 @@ export default function UserNameplate({ user, onUpgrade, onDowngrade, onDelete, 
             </div>
             {/* only show buttons for other people, not myself */}
             {!isMe && (
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                     {user.role === "user" && (
                         <Button
                         variant="primary"
