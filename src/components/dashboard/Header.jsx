@@ -1,4 +1,4 @@
-import { Home, Users, LogOut } from "lucide-react";
+import { Home, LogOut, MonitorCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../common/Button";
 
@@ -36,8 +36,8 @@ export default function Header({ devices, isAdmin, onLogout, title="Smart Home",
                 <>
                   {isAdmin && (
                     <Button
-                      text="Manage Users"
-                      icon={<Users className="w-4 h-4"/>}
+                      text="Admin Panel"
+                      icon={<MonitorCog className="w-4 h-4"/>}
                       onClick={() => navigate("/admin")}
                       variant="ghost"
                     />
