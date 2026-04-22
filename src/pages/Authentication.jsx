@@ -10,14 +10,14 @@ export default function Authentication({ onAuthSuccess }) {
   const handleLogin = async (username, password) => {
     const result = await login(username, password);
     if (result.success) {
-      onAuthSuccess();
+      onAuthSuccess({ username });
     }
   };
 
   const handleSignup = async (username, password) => {
     const result = await signup(username, password);
     if (result.success) {
-      onAuthSuccess();
+      onAuthSuccess({ username });
     }
   };
 
