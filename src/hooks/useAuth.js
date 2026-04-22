@@ -1,32 +1,27 @@
 import { useState, useEffect, useCallback } from "react";
-import * as authService from "../services/authService";
-import {
-  isTokenExpiringSoon,
-  getUserFromToken,
-  decodeToken,
-} from "../services/tokenService";
+import * as authService from "../service/api";
 
-// Auth context hook for managing authentication state and API calls
+// auth context hook for managing authentication state and session persistence
 export function useAuth() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
+  const [accessToken, setAccessToken] = useState(sessionStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Try to restore session from refresh token cookie on mount
+  // try to restore session on mount using the backend's /refresh endpoint
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        // Check if we have a refresh token cookie by attempting to refresh
-        const result = await authService.refreshToken();
+        // the browser automatically sends the http-only 'jwt' cookie
+        const result = await authService.auth("refresh", {});
         if (result.success) {
           setAccessToken(result.accessToken);
-          const user = getUserFromToken(result.accessToken);
-          setCurrentUser(user);
+          // since tokenservice is removed, we flag the user as authenticated
+          setCurrentUser({ authenticated: true });
           setError(null);
         }
       } catch (err) {
-        console.log("No existing session to restore");
+        // no valid session found, user remains logged out
       } finally {
         setLoading(false);
       }
@@ -35,47 +30,16 @@ export function useAuth() {
     restoreSession();
   }, []);
 
-  // Handle token refresh when it's expiring soon
-  useEffect(() => {
-    if (!accessToken) {
-      setLoading(false);
-      return;
-    }
-
-    if (isTokenExpiringSoon(accessToken)) {
-      const refreshTokenFormatically = async () => {
-        try {
-          const result = await authService.refreshToken();
-          if (result.success) {
-            setAccessToken(result.accessToken);
-            setError(null);
-          } else {
-            // Refresh failed, logout user
-            handleLogout();
-            setError("Session expired. Please login again.");
-          }
-        } catch (err) {
-          handleLogout();
-          setError("Failed to refresh session");
-        }
-      };
-
-      refreshTokenFormatically();
-    }
-
-    setLoading(false);
-  }, [accessToken]);
-
+  // handles user login and sets the access token
   const handleLogin = useCallback(async (username, password) => {
     setLoading(true);
     setError(null);
 
-    const result = await authService.login(username, password);
+    const result = await authService.auth("login", { username, password });
 
     if (result.success) {
       setAccessToken(result.accessToken);
-      const user = getUserFromToken(result.accessToken);
-      setCurrentUser(user);
+      setCurrentUser({ username });
       return { success: true };
     } else {
       setError(result.error);
@@ -83,16 +47,17 @@ export function useAuth() {
     }
   }, []);
 
+  // handles user signup and sets the access token
   const handleSignup = useCallback(async (username, password) => {
     setLoading(true);
     setError(null);
 
-    const result = await authService.signup(username, password);
+    // matching the backend usermodel.adduser requirements
+    const result = await authService.auth("signup", { username, password });
 
     if (result.success) {
       setAccessToken(result.accessToken);
-      const user = getUserFromToken(result.accessToken);
-      setCurrentUser(user);
+      setCurrentUser({ username });
       return { success: true };
     } else {
       setError(result.error);
@@ -100,18 +65,20 @@ export function useAuth() {
     }
   }, []);
 
+  // handles user logout and clears both server-side and client-side state
   const handleLogout = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    // Call logout endpoint to clear refresh token from backend
-    await authService.logout(accessToken);
+    // notify backend to revoke the refresh token and clear the cookie
+    await authService.auth("logout", {});
 
-    // Clear local state
+    // clear all local auth state
     setAccessToken(null);
     setCurrentUser(null);
+    sessionStorage.removeItem("token");
     setLoading(false);
-  }, [accessToken]);
+  }, []);
 
   return {
     currentUser,
@@ -121,6 +88,6 @@ export function useAuth() {
     login: handleLogin,
     signup: handleSignup,
     logout: handleLogout,
-    isLoggedIn: !!currentUser && !!accessToken,
+    isLoggedIn: !!accessToken,
   };
 }
