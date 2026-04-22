@@ -4,7 +4,7 @@ import { useState } from "react";
 
 // added isloading and externalerror to handle backend states
 export default function RegisterForm({ onSignup, isLoading = false, error: externalError = null }) {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [formData, setFormData] = useState({ username: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
   
   // added state to track active async submission
@@ -19,8 +19,7 @@ export default function RegisterForm({ onSignup, isLoading = false, error: exter
     e.preventDefault();
     const newErrors = {};
 
-    if (!formData.name) newErrors.name = "Full Name is required";
-    if (!formData.email) newErrors.email = "Email is required";
+    if (!formData.username) newErrors.username = "Username is required";
     
     if (!formData.password) newErrors.password = "Password is required";
     else if (formData.password.length < 6) newErrors.password = "Must be at least 6 characters";
@@ -36,8 +35,7 @@ export default function RegisterForm({ onSignup, isLoading = false, error: exter
 
     // implemented async handling and submission toggle
     setIsSubmitting(true);
-    // send email as username to backend
-    await onSignup(formData.email, formData.password);
+    await onSignup(formData.username, formData.password);
     setIsSubmitting(false);
   };
 
@@ -54,24 +52,13 @@ export default function RegisterForm({ onSignup, isLoading = false, error: exter
       )}
       <div className="flex flex-col gap-4">
         <Input
-            label="Full Name"
+            label="Username"
             type="text"
-            name="name"
-            placeholder="Enter your full name"
-            value={formData.name}
+            name="username"
+            placeholder="Choose a username"
+            value={formData.username}
             onChange={handleChange}
-            error={errors.name}
-            // added disabled state to prevent input during loading
-            disabled={isSubmitting || isLoading}
-        />
-        <Input
-            label="Email Address"
-            type="email"
-            name="email"
-            placeholder="Enter your email address"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
+            error={errors.username}
             // added disabled state to prevent input during loading
             disabled={isSubmitting || isLoading}
         />
