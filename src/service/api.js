@@ -1,4 +1,4 @@
-// uses the relative path defined in vite.config.js
+
 const API_BASE_URL = "/api";
 
 export async function auth(path, body) {
@@ -6,7 +6,10 @@ export async function auth(path, body) {
     console.log(`[API] POST /${path}`, body);
     const res = await fetch(`${API_BASE_URL}/${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
       // required for backend Routes.js to set/read 'jwt' cookie
       credentials: "include", 
       body: JSON.stringify(body),
