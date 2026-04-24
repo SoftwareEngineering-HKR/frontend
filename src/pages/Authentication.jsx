@@ -2,11 +2,21 @@ import { useState } from "react";
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
 
-export default function Authentication({ onAuthSuccess }) {
+export default function Authentication({ login, signup, loading, error }) {
   const [isLogin, setIsLogin] = useState(true);
 
-  const handleAuthSuccess = (userData) => {
-    onAuthSuccess(userData);
+  const handleLogin = async (username, password) => {
+    const result = await login(username, password);
+    if (result.success) {
+      // App.jsx will handle navigation via currentUser state change
+    }
+  };
+
+  const handleSignup = async (username, password) => {
+    const result = await signup(username, password);
+    if (result.success) {
+      // App.jsx will handle navigation via currentUser state change
+    }
   };
 
   return (
@@ -28,9 +38,9 @@ export default function Authentication({ onAuthSuccess }) {
 
           <div className="w-full">
             {isLogin ? (
-              <LoginForm onLogin={handleAuthSuccess} />
+              <LoginForm onLogin={handleLogin} isLoading={loading} error={error} />
             ) : (
-              <RegisterForm onLogin={handleAuthSuccess} />
+              <RegisterForm onSignup={handleSignup} isLoading={loading} error={error} />
             )}
           </div>
 
@@ -40,6 +50,7 @@ export default function Authentication({ onAuthSuccess }) {
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-primary font-bold hover:underline ml-1"
+                disabled={loading}
               >
                 {isLogin ? "Create Account" : "Sign In"}
               </button>
