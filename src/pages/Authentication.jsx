@@ -1,23 +1,21 @@
 import { useState } from "react";
-import { useAuth } from "../hooks/useAuth";
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
 
-export default function Authentication({ onAuthSuccess }) {
+export default function Authentication({ login, signup, loading, error }) {
   const [isLogin, setIsLogin] = useState(true);
-  const { login, signup, loading, error } = useAuth();
 
   const handleLogin = async (username, password) => {
     const result = await login(username, password);
     if (result.success) {
-      onAuthSuccess({ username });
+      // App.jsx will handle navigation via currentUser state change
     }
   };
 
   const handleSignup = async (username, password) => {
     const result = await signup(username, password);
     if (result.success) {
-      onAuthSuccess({ username });
+      // App.jsx will handle navigation via currentUser state change
     }
   };
 
