@@ -20,6 +20,7 @@ export function useAuth() {
           setCurrentUser({ authenticated: true });
           setError(null);
         }
+        // If refresh fails, no problem - user just needs to login
       } catch (err) {
         // no valid session found, user remains logged out
       } finally {
@@ -40,9 +41,11 @@ export function useAuth() {
     if (result.success) {
       setAccessToken(result.accessToken);
       setCurrentUser({ username });
+      setLoading(false);
       return { success: true };
     } else {
       setError(result.error);
+      setLoading(false);
       return { success: false, error: result.error };
     }
   }, []);
@@ -58,9 +61,11 @@ export function useAuth() {
     if (result.success) {
       setAccessToken(result.accessToken);
       setCurrentUser({ username });
+      setLoading(false);
       return { success: true };
     } else {
       setError(result.error);
+      setLoading(false);
       return { success: false, error: result.error };
     }
   }, []);
@@ -71,7 +76,7 @@ export function useAuth() {
     setError(null);
 
     // notify backend to revoke the refresh token and clear the cookie
-    await authService.auth("logout", {});
+    await authService.logout();
 
     // clear all local auth state
     setAccessToken(null);
