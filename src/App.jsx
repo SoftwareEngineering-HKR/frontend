@@ -1,24 +1,35 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
 import Toast from "./components/common/Toast.jsx";
 import { useWebSocket } from "./hooks/useWebSocket.js";
+import { useAuth } from "./hooks/useAuth.js";
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { currentUser, accessToken, logout, login, signup, loading, error } = useAuth();
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [actionError, setActionError] = useState(null); // for WS action errors
-  // Connects when logged in, disconnects on logout
-  //  -> need to change with proper login once that is implemented in the backend
+  // Connects when logged in with accessToken, disconnects on logout
   const { devices, connectionStatus, wsError, sendMessage } =
-    useWebSocket(!!currentUser);
+    useWebSocket(!!currentUser, accessToken);
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  // Listen for forced logout events from API (e.g., when token refresh fails)
+  useEffect(() => {
+    const handleLogoutRequired = async () => {
+      console.log("[App] Forced logout triggered (token refresh failed)");
+      await logout();
+    };
+
+    window.addEventListener("logout-required", handleLogoutRequired);
+    return () => window.removeEventListener("logout-required", handleLogoutRequired);
+  }, [logout]);
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   // Need to fix the value part later for different action types
@@ -148,7 +159,7 @@ function App() {
             currentUser ? (
               <Navigate to="/overview" />
             ) : (
-              <Authentication onAuthSuccess={setCurrentUser} />
+              <Authentication login={login} signup={signup} loading={loading} error={error} />
             )
           }
         />

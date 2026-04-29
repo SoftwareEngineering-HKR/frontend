@@ -3,12 +3,12 @@ import { HANDLERS } from "./wsMessages/messageHandlers";
 import { BUILDERS } from "./wsMessages/messageBuilders";
 
 // const WS_URL = "ws://192.168.50.207:8080";
-const WS_URL = "ws://localhost:8080";
+const WS_BASE_URL = "ws://localhost:8080";
 
 // How long to wait for a device to confirm a state change before showing an error
 const UPDATE_TIMEOUT_MS = 5000;
 
-export function useWebSocket(isLoggedIn) {
+export function useWebSocket(isLoggedIn, accessToken) {
   const [devices, setDevices] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState("disconnected"); // "disconnected" | "connecting" | "connected"
   const [wsError, setWsError] = useState(null);
@@ -19,10 +19,9 @@ export function useWebSocket(isLoggedIn) {
   // If we get an "action response" error message (from handler) or the timeout triggers, we call reject() and clear the pending command
   const pendingRef = useRef({});
 
-  // When user logs in, it connects to WS; on logout, it disconnects
-  //  -> need to change with proper login once that is implemented in the backend
+  // When user logs in with a valid token, it connects to WS; on logout, it disconnects
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !accessToken) {
       wsRef.current?.close();
       wsRef.current = null;
       setDevices([]);
@@ -31,7 +30,8 @@ export function useWebSocket(isLoggedIn) {
     }
 
     setConnectionStatus("connecting");
-    const ws = new WebSocket(WS_URL);
+    const wsUrl = `${WS_BASE_URL}?token=${encodeURIComponent(accessToken)}`;
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -71,7 +71,7 @@ export function useWebSocket(isLoggedIn) {
     return () => {
       ws.close();
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, accessToken]);
 
   const sendMessage = useCallback((type, params) => {
     return new Promise((resolve, reject) => {
