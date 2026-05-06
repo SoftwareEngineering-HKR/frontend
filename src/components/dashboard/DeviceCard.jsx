@@ -2,7 +2,6 @@ import { deviceIcons } from "./deviceIcons";
 import ToggleControl from "./ActionControls/ToggleControl";
 import SliderControl from "./ActionControls/SliderControl";
 import SensorDisplay from "./ActionControls/SensorDisplay";
-import Schedule from "./Schedule";
 import { useState, useEffect } from "react";
 import { Wifi, WifiOff, Trash2, Calculator } from "lucide-react";
 
@@ -108,16 +107,6 @@ export default function DeviceCard(props) {
             return null;
           })}
         </div>
-        {/* Scheduling */}
-        {/*
-        <Schedule
-          schedule={device.schedule}
-          isOnline={device.isOnline}
-          onChange={(newSchedule) =>
-            props.onScheduleUpdate?.(device.id, newSchedule)
-          }
-        />
-        */}
       </div>
     </div>
   );

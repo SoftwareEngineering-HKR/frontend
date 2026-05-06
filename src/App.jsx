@@ -63,25 +63,6 @@ function App() {
         return user;
       }),
     );
-  };
-
-  const handleScheduleUpdate = (deviceId, schedule) => {
-    if (!currentUser) return;
-
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => {
-        // Using email for now, later use id when backend is implemented
-        if (user.email === currentUser.email) {
-          return {
-            ...user,
-            devices: user.devices.map((device) =>
-              device.id === deviceId ? { ...device, schedule } : device,
-            ),
-          };
-        }
-        return user;
-      }),
-    );
   }; */
 
   const handleRemoveDevice = (deviceId) => {
@@ -108,15 +89,6 @@ function App() {
   // Temporary to not break everything when removing devices - will fix when backend is fully implemented
   const handleAddDevice = (newDevice) => {
     console.log("Add device not yet supported by backend", newDevice);
-  };
-
-  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
-  const handleScheduleUpdate = (deviceId, schedule) => {
-    console.log(
-      "Schedule update not yet supported by backend",
-      deviceId,
-      schedule,
-    );
   };
 
   const openConfirm = ({ title, message, onConfirm }) => {
@@ -163,7 +135,6 @@ function App() {
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
                 onAddDevice={handleAddDevice}
-                onScheduleUpdate={handleScheduleUpdate}
                 isAdmin={false} // Will need to be implemented properly when backend is ready
               />
             ) : (
