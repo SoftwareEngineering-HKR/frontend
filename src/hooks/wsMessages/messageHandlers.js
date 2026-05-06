@@ -38,6 +38,13 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
   );
 }
 
+function handleDeviceOnlineState(payload, { setDevices }) {
+  const { deviceID, content } = payload;
+  setDevices((prev) =>
+    prev.map((d) => (d.id === deviceID ? { ...d, isOnline: content } : d)),
+  );
+}
+
 // Backend sends this on 403/500 errors related to an action command
 function handleActionResponse(payload, { pendingRef, setWsError }) {
   const { message: errorMsg } = payload;
@@ -55,4 +62,5 @@ export const HANDLERS = {
   "inital devices": handleInitialDevices,
   "update value": handleUpdateValue,
   "action response": handleActionResponse,
+  "update device onlineState": handleDeviceOnlineState,
 };
