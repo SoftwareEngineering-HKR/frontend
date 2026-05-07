@@ -104,5 +104,10 @@ export function useWebSocket(isLoggedIn, accessToken) {
     });
   }, []);
 
-  return { devices, connectionStatus, wsError, sendMessage };
+  // To handle device removal in the UI after sending the delete command
+  const removeDevice = useCallback((deviceId) => {
+    setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+  }, []);
+
+  return { devices, connectionStatus, wsError, sendMessage, removeDevice };
 }
