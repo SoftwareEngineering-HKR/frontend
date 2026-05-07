@@ -15,20 +15,20 @@ export default function UserNameplate({ user, onUpgrade, onDowngrade, onDelete, 
             <div className="flex items-center min-w-0 space-x-2">
                 <div className="flex items-center gap-1 flex-wrap">
                     <span className="font-semibold text-gray-900 dark:text-white truncate text-sm">
-                        {user.name}
+                        {user.username}
                     </span>
                     {isMe && (
                         <span className="text-xs text-gray-400 dark:text-gray-500">(you)</span>
                     )}
                 </div>
                 <div className="mt-0.5">
-                    <RoleTag role={user.role}/>
+                    <RoleTag role={user.type}/>
                 </div>
             </div>
             {/* only show buttons for other people, not myself */}
             {!isMe && (
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    {user.role === "user" && (
+                    {user.type === "user" && (
                         <Button
                         variant="primary"
                         icon={<CircleArrowUp className="w-4 h-4"/>}
@@ -36,7 +36,7 @@ export default function UserNameplate({ user, onUpgrade, onDowngrade, onDelete, 
                         title="Promote to Admin"
                         />
                     )}
-                    {user.role === "admin" && (
+                    {user.type === "admin" && (
                         <Button
                         variant="primary"
                         icon={<CircleArrowDown className="w-4 h-4"/>}
