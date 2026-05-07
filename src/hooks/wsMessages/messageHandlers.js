@@ -40,7 +40,13 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
 
 // Backend sends this on 403/500 errors related to an action command
 function handleActionResponse(payload, { pendingRef, setWsError }) {
-  const { message: errorMsg } = payload;
+  const { message: errorMsg, statusCode: code } = payload;
+
+  if (code == 200) {
+    console.log(errorMsg);
+    return;
+  }
+
   Object.keys(pendingRef.current).forEach((deviceId) => {
     const p = pendingRef.current[deviceId];
     clearTimeout(p.timerId);
@@ -50,9 +56,19 @@ function handleActionResponse(payload, { pendingRef, setWsError }) {
   setWsError(errorMsg);
 }
 
+function handleUsers(payload, { setUsers }) {
+  setUsers(payload.users);
+}
+
+function handleRooms(payload, { setRooms }) {
+  setRooms(payload.rooms);
+}
+
 // To map incoming message type strings to handler functions
 export const HANDLERS = {
   "inital devices": handleInitialDevices,
   "update value": handleUpdateValue,
   "action response": handleActionResponse,
+  "users": handleUsers,
+  "rooms": handleRooms,
 };
