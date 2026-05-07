@@ -9,7 +9,7 @@ export default function RoomPlate({ room, onRename, onDelete }) {
 
   const handleSave = () => {
     const trimmed = value.trim();
-    if (trimmed && trimmed !== room) onRename(room, trimmed);
+    if (trimmed && trimmed !== room.name) onRename(room.id, trimmed);
     setIsEditing(false);
   };
 
