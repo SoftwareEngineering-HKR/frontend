@@ -135,7 +135,7 @@ function App() {
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
                 onAddDevice={handleAddDevice}
-                isAdmin={false} // Will need to be implemented properly when backend is ready
+                isAdmin={true} // Will need to be implemented properly when backend is ready
               />
             ) : (
               <Navigate to="/authentication" />
