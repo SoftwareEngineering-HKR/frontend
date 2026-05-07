@@ -5,25 +5,24 @@ import Modal from "../components/common/Modal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import UserNameplate from "../components/admin/UserNameplate";
 import RoomPlate from "../components/admin/RoomPlate";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, LayoutDashboard, Plus, X } from "lucide-react";
+import Input from "../components/common/Input";
 
-const MOCK_ROOMS = [
-  { id: "r-1", name: "Living Room", deviceCount: 4 },
-  { id: "r-2", name: "Kitchen", deviceCount: 2 },
-  { id: "r-3", name: "Bedroom", deviceCount: 3 },
-  { id: "r-4", name: "Office", deviceCount: 1 },
-];
-
-export default function AdminPanel({ users, currentUser, onUsersChange, onLogout }) {
+export default function AdminPanel({ send, users, rooms, currentUser, onUsersChange, onLogout }) {
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [toast, setToast] = useState(null);
-    const [rooms, setRooms] = useState(MOCK_ROOMS);
     const [isAddingRoom, setIsAddingRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState("");
     const navigate = useNavigate();
+
+    // fetch users and rooms
+    useEffect(() => {
+        send.getUsers();
+        send.getRooms();
+    }, [])
 
     // confirm dialog handlers
     const openConfirm = ({ title, message, onConfirm }) => {
@@ -38,14 +37,10 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
     const handleDowngrade = (user) => {
         openConfirm({
             title: "Demote to User",
-            message: `Demote ${user.name} to User? Admin features will be lost.`,
+            message: `Demote ${user.username} to User? Admin features will be lost.`,
             onConfirm: () => {
-                // proper logic with backend missing
-                // hardcoded role change
-                onUsersChange((prev) =>
-                    prev.map((u) => (u.id === user.id ? { ...u, role: "user" } : u))
-                );
-                setToast({ message: `${user.name} successfully demoted to User.` });
+                send.demote(user.username);
+                setToast({ message: `${user.username} successfully demoted to User.` });
                 closeConfirm();   
             }
         });
@@ -54,14 +49,10 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
     const handleUpgrade = (user) => {
         openConfirm({
             title: "Promote to Admin",
-            message: `Promote ${user.name} to Admin? Access to admin features will be granted.`,
+            message: `Promote ${user.username} to Admin? Access to admin features will be granted.`,
             onConfirm: () => {
-                // proper logic with backend missing
-                // hardcoded role change
-                onUsersChange((prev) =>
-                    prev.map((u) => (u.id === user.id ? { ...u, role: "admin" } : u))
-                );
-                setToast({ message: `${user.name} successfully promoted to Admin.` });
+                send.promote(user.username);
+                setToast({ message: `${user.username} successfully promoted to Admin.` });
                 closeConfirm();   
             }
         });
@@ -70,14 +61,10 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
     const handleDeleteUser = (user) => {
         openConfirm({
             title: "Delete User",
-            message: `Delete ${user.name} permanently? This cannot be undone.`,
+            message: `Delete ${user.username} permanently? This cannot be undone.`,
             onConfirm: () => {
-                // proper logic with backend missing
-                // hardcoded "deletion" (just filtered)
-                onUsersChange((prev) =>
-                    prev.filter((u) => u.id !== user.id)
-                );
-                setToast({ message: `${user.name} successfully deleted from users.` });
+                send.deleteUser(user.username);
+                setToast({ message: `${user.username} successfully deleted from users.` });
                 closeConfirm();   
             }
         });
@@ -85,20 +72,17 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
 
     // room handlers
     const handleRenameRoom = (roomId, newName) => {
-        // replace with API call to backend
-        setRooms((prev) =>
-            prev.map((r) => (r.id === roomId ? { ...r, name: newName } : r))
-        );
+        send.renameRoom(roomId, newName),
         setToast({ message: `Room renamed to "${newName}".` });
     };
  
     const handleDeleteRoom = (room) => {
+        // TODO: get devices associated with the room to show deviceCount in message
         openConfirm({
             title: "Delete Room",
             message: `Delete "${room.name}"? ${room.deviceCount > 0 ? `${room.deviceCount} device(s) will become unassigned.` : "This cannot be undone."}`,
             onConfirm: () => {
-                // replace with API call to backend
-                setRooms((prev) => prev.filter((r) => r.id !== room.id));
+                send.deleteRoom(room.id);
                 setToast({ message: `"${room.name}" deleted.` });
                 closeConfirm();
             }
@@ -108,19 +92,16 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
     const handleAddRoom = () => {
         const trimmed = newRoomName.trim();
         if (!trimmed) return;
-        // replace with API call to backend
-        const newRoom = {
-            id: `r-${Date.now()}`,
-            name: trimmed,
-            deviceCount: 0,
-        };
-        setRooms((prev) => [...prev, newRoom]);
+        send.createRoom(newRoomName);
         setToast({ message: `"${trimmed}" added.` });
         setNewRoomName("");
         setIsAddingRoom(false);
     };
 
-    const admins = users.filter((u) => u.role === "admin");
+    const roomSort = (a, b) => a.name - b.name;
+    const userSort = (a, b) => a.username - b.username;
+
+    const admins = users.sort(userSort).filter((u) => u.type === "admin");
 
     return (
         <>
@@ -146,11 +127,11 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
                         User Management
                     </h2>
                     <div className="space-y-3">
-                        {users.map((u) => (
+                        {users?.sort(userSort).map((u) => (
                             <UserNameplate
                                 key={u.id}
                                 user={u}
-                                currentUser={currentUser}
+                                //currentUser={currentUser}
                                 onUpgrade={handleUpgrade}
                                 onDowngrade={handleDowngrade}
                                 onDelete={handleDeleteUser}
@@ -177,7 +158,7 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
                     </div>
                     <div>
                         <div className="space-y-3">
-                        {rooms.map((room) => (
+                        {rooms.sort(roomSort).map((room) => (
                             <RoomPlate
                                 key={room.id}
                                 room={room}
@@ -195,13 +176,12 @@ export default function AdminPanel({ users, currentUser, onUsersChange, onLogout
                         {/* Inline add form */}
                         {isAddingRoom && (
                             <div className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded-xl">
-                                <input
+                                <Input
                                     autoFocus
                                     type="text"
                                     placeholder="Room name"
                                     value={newRoomName}
                                     onChange={(e) => setNewRoomName(e.target.value)}
-                                    onKeyDown={handleAddRoomKeyDown}
                                     className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                                 />
                                 <Button
