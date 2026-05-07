@@ -10,6 +10,8 @@ const UPDATE_TIMEOUT_MS = 5000;
 
 export function useWebSocket(isLoggedIn, accessToken) {
   const [devices, setDevices] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState("disconnected"); // "disconnected" | "connecting" | "connected"
   const [wsError, setWsError] = useState(null);
 
@@ -18,6 +20,9 @@ export function useWebSocket(isLoggedIn, accessToken) {
   // If the backend confirms the update with an "update value" message (from handler), we call resolve() and clear the timeout
   // If we get an "action response" error message (from handler) or the timeout triggers, we call reject() and clear the pending command
   const pendingRef = useRef({});
+
+  // context to pass to all handlers
+  const handlerContext = { setDevices, setUsers, setRooms, setWsError, pendingRef };
 
   // When user logs in with a valid token, it connects to WS; on logout, it disconnects
   useEffect(() => {
@@ -52,7 +57,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
       const handler = HANDLERS[message.type];
       if (handler) {
-        handler(message.payload, { setDevices, setWsError, pendingRef });
+        handler(message.payload, handlerContext);
       } else {
         console.warn("Unknown WebSocket message type:", message.type);
       }
@@ -92,7 +97,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
       // For device updates, if no "update value" comes back within the timeout, we assume the device failed.
       // Other messages (like room or device management) don't have backend responses yet,
       // so we resolve them immediately for now and can change when/if the backend implements those.
-      if (params.deviceId) {
+      if (params?.deviceId) {
         const timerId = setTimeout(() => {
           delete pendingRef.current[params.deviceId];
           reject(new Error("Device did not respond in time"));
@@ -104,5 +109,17 @@ export function useWebSocket(isLoggedIn, accessToken) {
     });
   }, []);
 
-  return { devices, connectionStatus, wsError, sendMessage };
+  const send = {
+    deviceUpdate: (deviceId, value) => sendMessage("update value", { deviceId, value }),
+    getUsers: () => sendMessage("get users"),
+    promote: (name) => sendMessage("update user role", { name, role: "admin" }),
+    demote: (name) => sendMessage("update user role", { name, role: "user" }),
+    deleteUser: (name) => sendMessage("delete user", { name }),
+    getRooms: () => sendMessage("get all rooms"),
+    createRoom: (room) => sendMessage("create room", { room }),
+    deleteRoom: (id) => sendMessage("delete room", { id }),
+    renameRoom: (id, name) => sendMessage("update room", { id, name }),
+  }
+
+  return { devices, users, rooms, connectionStatus, wsError, send };
 }
