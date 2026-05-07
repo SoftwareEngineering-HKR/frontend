@@ -15,7 +15,7 @@ function App() {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [actionError, setActionError] = useState(null); // for WS action errors
   // Connects when logged in with accessToken, disconnects on logout
-  const { devices, connectionStatus, wsError, sendMessage } =
+  const { devices, users, rooms, connectionStatus, wsError, send } =
     useWebSocket(!!currentUser, accessToken);
 
   // Listen for forced logout events from API (e.g., when token refresh fails)
@@ -41,7 +41,7 @@ function App() {
     const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
 
     try {
-      await sendMessage("update value", { deviceId, value: numericValue });
+      await send.deviceUpdate("update value", { deviceId, value: numericValue });
     } catch (error) {
       setActionError(error.message);
     }
@@ -178,7 +178,7 @@ function App() {
                 onRemoveDevice={handleRemoveDevice}
                 onAddDevice={handleAddDevice}
                 onScheduleUpdate={handleScheduleUpdate}
-                isAdmin={false} // Will need to be implemented properly when backend is ready
+                isAdmin={true} // Will need to be implemented properly when backend is ready
               />
             ) : (
               <Navigate to="/authentication" />
@@ -189,11 +189,13 @@ function App() {
         <Route
           path="/admin"
           element={
-            currentUser && currentUser.role === "admin" ? (
+            currentUser ? 
+            (
               <AdminPanel
+                send={send}
                 users={users}
+                rooms={rooms}
                 currentUser={currentUser}
-                onUsersChange={setUsers}
                 onLogout={handleLogout}
               />
             ) : (
