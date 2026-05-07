@@ -7,13 +7,81 @@ function buildUpdateValue({ deviceId, value }) {
   };
 }
 
-// Just an example from what Niko sent
-// function buildDeleteDevice({ id }) {
-//   return { type: "delete device", payload: { id } };
-// }
+function buildGetUsers() {
+  return {
+    type: "get users",
+  };
+}
 
-// once backend implements more actions, we can add more builders here like the handlers
+function buildUpdateRole({ name, role }) {
+  return {
+    type: "update user role",
+    payload: 
+      {
+        userName: name,
+        role: role,
+      }
+  }
+}
+
+function buildDeleteUser({ name }) {
+  console.log("called delete user!");
+  console.log(name);
+  return {
+    type: "delete user",
+    payload: 
+      {
+        userName: name,
+      }
+  }
+}
+
+function buildGetRooms() {
+  return {
+    type: "get all rooms",
+  };
+}
+
+function buildCreateRoom({ room }) {
+  return {
+    type: "create room",
+    payload: 
+      {
+        name: room,
+      }
+  }
+}
+
+function buildDeleteRoom({ id }) {
+  return {
+    type: "delete room",
+    payload: 
+      {
+        id: id
+      }
+  }
+}
+
+function buildRenameRoom({ id, name }) {
+  return {
+    type: "update room",
+    payload: 
+      {
+        id: id,
+        name: name,
+      }
+  }
+}
+
+// BUILDER pairs
+// FORMAT | "message type": builderFunction
 export const BUILDERS = {
   "update value": buildUpdateValue,
-  // "delete device": buildDeleteDevice, -> just an example of what it will look like
+  "get users": buildGetUsers,
+  "update user role": buildUpdateRole,
+  "delete user": buildDeleteUser,
+  "get all rooms": buildGetRooms,
+  "create room": buildCreateRoom,
+  "delete room": buildDeleteRoom,
+  "update room": buildRenameRoom,
 };
