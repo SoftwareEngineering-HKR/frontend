@@ -70,7 +70,6 @@ export default function Overview(props) {
               filteredDevices={filteredDevices}
               onDeviceAction={props.onDeviceAction}
               onRemoveDevice={props.onRemoveDevice}
-              onScheduleUpdate={props.onScheduleUpdate}
               isAdmin={props.isAdmin}
             />
           )}
@@ -83,7 +82,7 @@ export default function Overview(props) {
         onAdd={handleDeviceAdded}
         connectedDeviceIds={connectedDeviceIds}
       />
- 
+
       {toast && (
         <Toast message={toast.message} onDismiss={() => setToast(null)} />
       )}

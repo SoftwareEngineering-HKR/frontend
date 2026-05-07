@@ -8,13 +8,14 @@ import { useWebSocket } from "./hooks/useWebSocket.js";
 import { useAuth } from "./hooks/useAuth.js";
 
 function App() {
-  const { currentUser, accessToken, logout, login, signup, loading, error } = useAuth();
+  const { currentUser, accessToken, logout, login, signup, loading, error } =
+    useAuth();
   // For the confirmation dialog when removing a device
   // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [actionError, setActionError] = useState(null); // for WS action errors
   // Connects when logged in with accessToken, disconnects on logout
-  const { devices, connectionStatus, wsError, sendMessage } =
+  const { devices, connectionStatus, wsError, sendMessage, removeDevice } =
     useWebSocket(!!currentUser, accessToken);
 
   // Listen for forced logout events from API (e.g., when token refresh fails)
@@ -25,14 +26,14 @@ function App() {
     };
 
     window.addEventListener("logout-required", handleLogoutRequired);
-    return () => window.removeEventListener("logout-required", handleLogoutRequired);
+    return () =>
+      window.removeEventListener("logout-required", handleLogoutRequired);
   }, [logout]);
 
   const handleLogout = async () => {
     await logout();
   };
 
-  // Need to fix the value part later for different action types
   const handleDeviceAction = async (deviceId, actionId, value) => {
     if (!currentUser) return;
 
@@ -46,38 +47,7 @@ function App() {
     }
   };
 
-  // Will be removed later
-  /*
-  const handleRemoveDevice = (deviceId) => {
-    if (!currentUser) return;
-
-    const device = currentUserData?.devices.find((d) => d.id === deviceId);
-
-    if (!device) return;
-
-    openConfirm({
-      title: "Remove Device",
-      message: `Are you sure you want to remove "${device.name}"?`,
-
-      onConfirm: () => {
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => {
-            // Using email for now, later use id when backend is implemented
-            if (user.email === currentUser.email) {
-              return {
-                ...user,
-                devices: user.devices.filter(
-                  (device) => device.id !== deviceId,
-                ),
-              };
-            }
-            return user;
-          }),
-        );
-        closeConfirm();
-      },
-    });
-  };
+  /* Will be removed later
 
   // temp handler to add device only to admins
   // will be replaced with some proper API call
@@ -93,48 +63,32 @@ function App() {
         return user;
       }),
     );
-  };
-
-  const handleScheduleUpdate = (deviceId, schedule) => {
-    if (!currentUser) return;
-
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => {
-        // Using email for now, later use id when backend is implemented
-        if (user.email === currentUser.email) {
-          return {
-            ...user,
-            devices: user.devices.map((device) =>
-              device.id === deviceId ? { ...device, schedule } : device,
-            ),
-          };
-        }
-        return user;
-      }),
-    );
   }; */
 
-  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
   const handleRemoveDevice = (deviceId) => {
+    if (!currentUser) return;
+
+    const device = devices.find((d) => d.id === deviceId);
+    if (!device) return;
+
     openConfirm({
       title: "Remove Device",
-      message: "Removing devices is not yet supported.",
-      onConfirm: closeConfirm,
+      message: `Are you sure you want to remove "${device.name}"?`,
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          await sendMessage("delete device", { id: deviceId });
+          removeDevice(deviceId); // To update the UI, since backend doesn't send an update after deleting
+        } catch (error) {
+          setActionError(error.message);
+        }
+      },
     });
   };
 
   // Temporary to not break everything when removing devices - will fix when backend is fully implemented
   const handleAddDevice = (newDevice) => {
     console.log("Add device not yet supported by backend", newDevice);
-  };
-
-  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
-  const handleScheduleUpdate = (deviceId, schedule) => {
-    console.log(
-      "Schedule update not yet supported by backend",
-      deviceId,
-      schedule,
-    );
   };
 
   const openConfirm = ({ title, message, onConfirm }) => {
@@ -159,7 +113,12 @@ function App() {
             currentUser ? (
               <Navigate to="/overview" />
             ) : (
-              <Authentication login={login} signup={signup} loading={loading} error={error} />
+              <Authentication
+                login={login}
+                signup={signup}
+                loading={loading}
+                error={error}
+              />
             )
           }
         />
@@ -176,8 +135,7 @@ function App() {
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
                 onAddDevice={handleAddDevice}
-                onScheduleUpdate={handleScheduleUpdate}
-                isAdmin={false} // Will need to be implemented properly when backend is ready
+                isAdmin={true} // Will need to be implemented properly when backend is ready
               />
             ) : (
               <Navigate to="/authentication" />

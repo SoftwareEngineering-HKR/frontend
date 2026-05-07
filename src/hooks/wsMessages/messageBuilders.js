@@ -7,13 +7,12 @@ function buildUpdateValue({ deviceId, value }) {
   };
 }
 
-// Just an example from what Niko sent
-// function buildDeleteDevice({ id }) {
-//   return { type: "delete device", payload: { id } };
-// }
+function buildDeleteDevice({ id }) {
+  return { type: "delete device", payload: { id } };
+}
 
 // once backend implements more actions, we can add more builders here like the handlers
 export const BUILDERS = {
   "update value": buildUpdateValue,
-  // "delete device": buildDeleteDevice, -> just an example of what it will look like
+  "delete device": buildDeleteDevice,
 };
