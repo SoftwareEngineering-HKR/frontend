@@ -7,6 +7,11 @@ function buildUpdateValue({ deviceId, value }) {
   };
 }
 
+function buildDeleteDevice({ id }) {
+  return { type: "delete device", payload: { id } };
+}
+
+// user handlers
 function buildGetUsers() {
   return {
     type: "get users",
@@ -36,6 +41,7 @@ function buildDeleteUser({ name }) {
   }
 }
 
+// room handlers
 function buildGetRooms() {
   return {
     type: "get all rooms",
@@ -84,4 +90,5 @@ export const BUILDERS = {
   "create room": buildCreateRoom,
   "delete room": buildDeleteRoom,
   "update room": buildRenameRoom,
+  "delete device": buildDeleteDevice,
 };

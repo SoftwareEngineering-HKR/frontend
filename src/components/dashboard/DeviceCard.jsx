@@ -2,12 +2,11 @@ import { deviceIcons } from "./deviceIcons";
 import ToggleControl from "./ActionControls/ToggleControl";
 import SliderControl from "./ActionControls/SliderControl";
 import SensorDisplay from "./ActionControls/SensorDisplay";
-import Schedule from "./Schedule";
 import { useState, useEffect } from "react";
 import { Wifi, WifiOff, Trash2, Calculator } from "lucide-react";
 
 export default function DeviceCard(props) {
-  const { device } = props;
+  const { device, isAdmin } = props;
   const Icon = deviceIcons[device.type] ?? Calculator; // just fallback icon
 
   return (
@@ -46,13 +45,15 @@ export default function DeviceCard(props) {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => props.onRemove(device.id)}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-            title="Remove device"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => props.onRemove(device.id)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              title="Remove device"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Online / Offline */}
@@ -106,16 +107,6 @@ export default function DeviceCard(props) {
             return null;
           })}
         </div>
-        {/* Scheduling */}
-        {/*
-        <Schedule
-          schedule={device.schedule}
-          isOnline={device.isOnline}
-          onChange={(newSchedule) =>
-            props.onScheduleUpdate?.(device.id, newSchedule)
-          }
-        />
-        */}
       </div>
     </div>
   );

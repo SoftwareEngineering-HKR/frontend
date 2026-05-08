@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import * as authService from "../service/api";
+import { jwtDecode } from "jwt-decode";
 
 // auth context hook for managing authentication state and session persistence
 export function useAuth() {
@@ -8,6 +9,25 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
+// helper to decode token and update user state
+  const handleUserData = useCallback((token) => {
+    try {
+      const decoded = jwtDecode(token);
+      // 'sub' is the userId, 'role' is admin/user from the backend
+      setCurrentUser({ 
+        id: decoded.sub, 
+        role: decoded.role,
+        isAdmin: decoded.role === 'admin' 
+      });
+      setAccessToken(token);
+      sessionStorage.setItem("token", token);
+    } catch (err) {
+      console.error("Invalid token format");
+    }
+  }, []);
+
+
   // try to restore session on mount using the backend's /refresh endpoint
   useEffect(() => {
     const restoreSession = async () => {
@@ -15,12 +35,10 @@ export function useAuth() {
         // the browser automatically sends the http-only 'jwt' cookie
         const result = await authService.auth("refresh", {});
         if (result.success) {
-          setAccessToken(result.accessToken);
-          // since tokenservice is removed, we flag the user as authenticated
-          setCurrentUser({ authenticated: true });
-          setError(null);
+        handleUserData(result.accessToken);
+        setError(null);  
         }
-        // If refresh fails, no problem - user just needs to login
+       
       } catch (err) {
         // no valid session found, user remains logged out
       } finally {
@@ -29,7 +47,7 @@ export function useAuth() {
     };
 
     restoreSession();
-  }, []);
+  }, [handleUserData]);
 
   // handles user login and sets the access token
   const handleLogin = useCallback(async (username, password) => {
@@ -39,8 +57,7 @@ export function useAuth() {
     const result = await authService.auth("login", { username, password });
 
     if (result.success) {
-      setAccessToken(result.accessToken);
-      setCurrentUser({ username });
+      handleUserData(result.accessToken);
       setLoading(false);
       return { success: true };
     } else {
@@ -57,10 +74,9 @@ export function useAuth() {
 
     // matching the backend usermodel.adduser requirements
     const result = await authService.auth("signup", { username, password });
-
+    
     if (result.success) {
-      setAccessToken(result.accessToken);
-      setCurrentUser({ username });
+      handleUserData(result.accessToken);
       setLoading(false);
       return { success: true };
     } else {
@@ -68,21 +84,19 @@ export function useAuth() {
       setLoading(false);
       return { success: false, error: result.error };
     }
-  }, []);
+  }, [handleUserData]);
 
   // handles user logout and clears both server-side and client-side state
   const handleLogout = useCallback(async () => {
     setLoading(true);
-    setError(null);
-
     // notify backend to revoke the refresh token and clear the cookie
     await authService.logout();
-
     // clear all local auth state
     setAccessToken(null);
     setCurrentUser(null);
     sessionStorage.removeItem("token");
     setLoading(false);
+
   }, []);
 
   return {
@@ -94,5 +108,7 @@ export function useAuth() {
     signup: handleSignup,
     logout: handleLogout,
     isLoggedIn: !!accessToken,
+    isAdmin: currentUser?.isAdmin || false
+
   };
 }

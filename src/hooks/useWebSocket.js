@@ -119,7 +119,14 @@ export function useWebSocket(isLoggedIn, accessToken) {
     createRoom: (room) => sendMessage("create room", { room }),
     deleteRoom: (id) => sendMessage("delete room", { id }),
     renameRoom: (id, name) => sendMessage("update room", { id, name }),
+    deleteDevice: (id, deviceId) => sendMessage("delete device", { id: deviceId }),
   }
 
   return { devices, users, rooms, connectionStatus, wsError, send };
+  // To handle device removal in the UI after sending the delete command
+  const removeDevice = useCallback((deviceId) => {
+    setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+  }, []);
+
+  return { devices, connectionStatus, wsError, sendMessage, removeDevice };
 }
