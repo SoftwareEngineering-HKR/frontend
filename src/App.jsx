@@ -136,7 +136,7 @@ function App() {
                 onDeviceAction={handleDeviceAction}
                 onRemoveDevice={handleRemoveDevice}
                 onAddDevice={handleAddDevice}
-                isAdmin={true} // Will need to be implemented properly when backend is ready
+                isAdmin={currentUser.isAdmin}
               />
             ) : (
               <Navigate to="/authentication" />
@@ -147,7 +147,7 @@ function App() {
         <Route
           path="/admin"
           element={
-            currentUser ? 
+            currentUser && currentUser.isAdmin ? 
             (
               <AdminPanel
                 send={send}
