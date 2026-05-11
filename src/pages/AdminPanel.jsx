@@ -10,9 +10,11 @@ import { useNavigate } from "react-router-dom";
 import { Settings, LayoutDashboard, Plus, X } from "lucide-react";
 import Input from "../components/common/Input";
 
-export default function AdminPanel({ send, users, rooms, currentUser, onUsersChange, onLogout }) {
+export default function AdminPanel({ send, currentUser, onLogout }) {
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    const [users, setUsers] = useState([]);
+    const [rooms, setRooms] = useState([]);
     const [toast, setToast] = useState(null);
     const [isAddingRoom, setIsAddingRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState("");
@@ -20,8 +22,18 @@ export default function AdminPanel({ send, users, rooms, currentUser, onUsersCha
 
     // fetch users and rooms
     useEffect(() => {
-        send.getUsers();
-        send.getRooms();
+        const fetchData = async () => {
+            try {
+                const users = await send.getUsers();
+                const rooms = await send.getRooms();
+                setUsers(users);
+                setRooms(rooms);
+            } catch (err) {
+                setToast({ message: err.message, isError: true });
+            }
+        };
+
+        fetchData();
     }, [])
 
     // confirm dialog handlers
@@ -38,9 +50,13 @@ export default function AdminPanel({ send, users, rooms, currentUser, onUsersCha
         openConfirm({
             title: "Demote to User",
             message: `Demote ${user.username} to User? Admin features will be lost.`,
-            onConfirm: () => {
-                send.demote(user.username);
-                setToast({ message: `${user.username} successfully demoted to User.` });
+            onConfirm: async () => {
+                try {
+                    await send.demote(user.username);
+                    setToast({ message: `${user.username} successfully demoted to User.` });
+                } catch (err) {
+                    setToast({ message: err.message, isError: true });
+                }
                 closeConfirm();   
             }
         });
@@ -50,9 +66,14 @@ export default function AdminPanel({ send, users, rooms, currentUser, onUsersCha
         openConfirm({
             title: "Promote to Admin",
             message: `Promote ${user.username} to Admin? Access to admin features will be granted.`,
-            onConfirm: () => {
-                send.promote(user.username);
-                setToast({ message: `${user.username} successfully promoted to Admin.` });
+            onConfirm: async () => {
+                try {
+                    await send.promote(user.username);
+                    setUsers(await send.getUsers());
+                    setToast({ message: `${user.username} successfully promoted to Admin.` });
+                } catch (err) {
+                    setToast({ message: err.message, isError: true });
+                }   
                 closeConfirm();   
             }
         });
@@ -62,18 +83,26 @@ export default function AdminPanel({ send, users, rooms, currentUser, onUsersCha
         openConfirm({
             title: "Delete User",
             message: `Delete ${user.username} permanently? This cannot be undone.`,
-            onConfirm: () => {
-                send.deleteUser(user.username);
-                setToast({ message: `${user.username} successfully deleted from users.` });
+            onConfirm: async () => {
+                try {
+                    await send.deleteUser(user.username);
+                    setToast({ message: `${user.username} successfully deleted from users.` });
+                } catch (err) {
+                    setToast({ message: err.message, isError: true });
+                }   
                 closeConfirm();   
             }
         });
     }
 
     // room handlers
-    const handleRenameRoom = (roomId, newName) => {
-        send.renameRoom(roomId, newName),
-        setToast({ message: `Room renamed to "${newName}".` });
+    const handleRenameRoom = async (roomId, newName) => {
+        try {
+            await send.renameRoom(roomId, newName),
+            setToast({ message: `Room renamed to "${newName}".` });
+        } catch (err) {
+            setToast({ message: err.message, isError: true });
+        }
     };
  
     const handleDeleteRoom = (room) => {
@@ -81,27 +110,37 @@ export default function AdminPanel({ send, users, rooms, currentUser, onUsersCha
         openConfirm({
             title: "Delete Room",
             message: `Delete "${room.name}"? ${room.deviceCount > 0 ? `${room.deviceCount} device(s) will become unassigned.` : "This cannot be undone."}`,
-            onConfirm: () => {
-                send.deleteRoom(room.id);
-                setToast({ message: `"${room.name}" deleted.` });
+            onConfirm: async () => {
+                try {
+                    await send.deleteRoom(room.id);
+                    setToast({ message: `"${room.name}" deleted.` });
+                } catch (err) {
+                    setToast({ message: err.message, isError: true });
+                    console.log("error deleting room");
+                }
                 closeConfirm();
             }
         });
     };
  
-    const handleAddRoom = () => {
+    const handleAddRoom = async () => {
         const trimmed = newRoomName.trim();
         if (!trimmed) return;
-        send.createRoom(newRoomName);
-        setToast({ message: `"${trimmed}" added.` });
-        setNewRoomName("");
-        setIsAddingRoom(false);
+
+        try {
+            await send.createRoom(newRoomName);
+            setToast({ message: `"${trimmed}" added.` });
+            setNewRoomName("");
+            setIsAddingRoom(false);
+        } catch (err) {
+            setToast({ message: err.message, isError: true });
+        }
     };
 
     const roomSort = (a, b) => a.name - b.name;
     const userSort = (a, b) => a.username - b.username;
 
-    const admins = users.sort(userSort).filter((u) => u.type === "admin");
+    const admins = users?.sort(userSort).filter((u) => u.type === "admin");
 
     return (
         <>
@@ -131,7 +170,7 @@ export default function AdminPanel({ send, users, rooms, currentUser, onUsersCha
                             <UserNameplate
                                 key={u.id}
                                 user={u}
-                                //currentUser={currentUser}
+                                currentUser={currentUser}
                                 onUpgrade={handleUpgrade}
                                 onDowngrade={handleDowngrade}
                                 onDelete={handleDeleteUser}
@@ -216,7 +255,11 @@ export default function AdminPanel({ send, users, rooms, currentUser, onUsersCha
         </Modal>
     
         {toast && (
-            <Toast message={toast.message} onDismiss={() => setToast(null)} />
+            <Toast
+                message={toast.message}
+                onDismiss={() => setToast(null)}
+                isError={toast.isError}
+            />
         )}
 
         <ConfirmDialog
