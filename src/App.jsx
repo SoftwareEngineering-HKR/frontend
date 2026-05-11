@@ -16,7 +16,7 @@ function App() {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [actionError, setActionError] = useState(null); // for WS action errors
   // Connects when logged in with accessToken, disconnects on logout
-  const { devices, users, rooms, connectionStatus, wsError, send } =
+  const { devices, connectionStatus, wsError, send } =
     useWebSocket(!!currentUser, accessToken);
 
   // Listen for forced logout events from API (e.g., when token refresh fails)
@@ -151,8 +151,6 @@ function App() {
             (
               <AdminPanel
                 send={send}
-                users={users}
-                rooms={rooms}
                 currentUser={currentUser}
                 onLogout={handleLogout}
               />
