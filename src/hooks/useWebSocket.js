@@ -13,15 +13,18 @@ export function useWebSocket(isLoggedIn, accessToken) {
   const [connectionStatus, setConnectionStatus] = useState("disconnected"); // "disconnected" | "connecting" | "connected"
   const [wsError, setWsError] = useState(null);
 
+  // references
   const wsRef = useRef(null);
-  // Tracks in-flight update commands: deviceId -> { timerId, resolve, reject }
-  // If the backend confirms the update with an "update value" message (from handler), we call resolve() and clear the timeout
-  // If we get an "action response" error message (from handler) or the timeout triggers, we call reject() and clear the pending command
   const pendingRef = useRef({});
   const actionResponseRef = useRef([]);
 
   // context to pass to all handlers
-  const handlerContext = { setDevices, setWsError, pendingRef, actionResponseRef };
+  const handlerContext = {
+    setDevices,
+    setWsError,
+    pendingRef,
+    actionResponseRef
+  };
 
   // When user logs in with a valid token, it connects to WS; on logout, it disconnects
   useEffect(() => {
