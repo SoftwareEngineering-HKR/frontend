@@ -77,8 +77,7 @@ function App() {
       onConfirm: async () => {
         closeConfirm();
         try {
-          await sendMessage("delete device", { id: deviceId });
-          send.deleteDevice(deviceId); // To update the UI, since backend doesn't send an update after deleting
+          await send.deleteDevice(deviceId);
         } catch (error) {
           setActionError(error.message);
         }
@@ -133,8 +132,6 @@ function App() {
             element={
               currentUser ? (
                 <Overview
-                  devices={devices}
-                  connectionStatus={connectionStatus}
                   onLogout={handleLogout}
                   onDeviceAction={handleDeviceAction}
                   onRemoveDevice={handleRemoveDevice}
