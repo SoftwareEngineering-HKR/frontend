@@ -72,12 +72,14 @@ function handleActionResponse(payload, { pendingRef, setWsError, actionResponseR
   }
 }
 
-function handleUsers(payload, { actionResponseRef }) {
+function handleUsers(payload, { setUsers, actionResponseRef }) {
+  setUsers(payload.users);
   const next = actionResponseRef.current.shift();
   next?.resolve(payload.users);
 }
 
-function handleRooms(payload, { actionResponseRef }) {
+function handleRooms(payload, { setRooms, actionResponseRef }) {
+  setRooms(payload.rooms);
   const next = actionResponseRef.current.shift();
   next?.resolve(payload.rooms);
 }
