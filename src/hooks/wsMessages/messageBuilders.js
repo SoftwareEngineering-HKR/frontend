@@ -11,7 +11,7 @@ function buildDeleteDevice({ id }) {
   return { type: "delete device", payload: { id } };
 }
 
-// user handlers
+// user builders
 function buildGetUsers() {
   return {
     type: "get users",
@@ -41,7 +41,7 @@ function buildDeleteUser({ name }) {
   }
 }
 
-// room handlers
+// room builders
 function buildGetRooms() {
   return {
     type: "get all rooms",
