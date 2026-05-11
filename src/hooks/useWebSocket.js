@@ -10,6 +10,8 @@ const UPDATE_TIMEOUT_MS = 5000;
 
 export function useWebSocket(isLoggedIn, accessToken) {
   const [devices, setDevices] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState("disconnected"); // "disconnected" | "connecting" | "connected"
   const [wsError, setWsError] = useState(null);
 
@@ -21,6 +23,8 @@ export function useWebSocket(isLoggedIn, accessToken) {
   // context to pass to all handlers
   const handlerContext = {
     setDevices,
+    setUsers,
+    setRooms,
     setWsError,
     pendingRef,
     actionResponseRef
@@ -126,7 +130,14 @@ export function useWebSocket(isLoggedIn, accessToken) {
     deleteDevice: (id, deviceId) => sendMessage("delete device", { id: deviceId }),
   }
 
-  return { devices, connectionStatus, wsError, send };
+  return {
+    devices,
+    users,
+    rooms,
+    connectionStatus,
+    wsError,
+    send
+  };
   // To handle device removal in the UI after sending the delete command
   // const removeDevice = useCallback((deviceId) => {
   //   setDevices((prev) => prev.filter((d) => d.id !== deviceId));
