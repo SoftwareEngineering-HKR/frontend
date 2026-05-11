@@ -40,6 +40,7 @@ export function SmartHouseProvider({ isLoggedIn, accessToken, children }) {
   // backend logic may change so this may eventually be dropped
   // need to add all device messages
   const send = {
+    ...rawSend,
     createRoom: (name) => rawSend.createRoom(name).then(refreshRooms),
     deleteRoom: (id) => rawSend.deleteRoom(id).then(refreshRooms),
     renameRoom: (id, name) => rawSend.renameRoom(id, name).then(refreshRooms),
