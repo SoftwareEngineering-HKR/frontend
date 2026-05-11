@@ -3,7 +3,7 @@ import RoleTag from "./RoleTag";
 import { CircleArrowUp, CircleArrowDown, Trash2 } from "lucide-react";
 
 export default function UserNameplate({ user, onUpgrade, onDowngrade, onDelete, currentUser, onClick }) {
-    const isMe = user === currentUser;
+    const isMe = user.id === currentUser.id;
 
     return (
         <>
