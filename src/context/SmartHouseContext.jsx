@@ -4,19 +4,22 @@ import { useWebSocket } from "../hooks/useWebSocket";
 const SmartHouseContext = createContext(null);
 
 export function SmartHouseProvider({ isLoggedIn, accessToken, children }) {
-    const [users, setUsers] = useState([]);
-    const [rooms, setRooms] = useState([]);
-    const { send: rawSend, devices, connectionStatus, wsError } = useWebSocket(isLoggedIn, accessToken);
+    const {
+      send: rawSend,
+      devices,
+      users,
+      rooms,
+      connectionStatus,
+      wsError
+    } = useWebSocket(isLoggedIn, accessToken);
 
     useEffect(() => {
         if (connectionStatus !== "connected") return;
 
         const init = async () => {
             try {
-                const users = await rawSend.getUsers();
-                const rooms = await rawSend.getRooms();
-                setUsers(users);
-                setRooms(rooms);
+                await rawSend.getUsers();
+                await rawSend.getRooms();
             } catch (err) {
                 console.error("Failed to fetch initial data:", err);
             }
@@ -26,24 +29,23 @@ export function SmartHouseProvider({ isLoggedIn, accessToken, children }) {
     }, [connectionStatus]);
 
   const refreshUsers = async () => {
-    const users = await rawSend.getUsers();
-    setUsers(users);
+    await rawSend.getUsers();
   };
 
   const refreshRooms = async () => {
-    const rooms = await rawSend.getRooms();
-    setRooms(rooms);
+    await rawSend.getRooms();
   };
 
   // this handles UI refreshes when something changes
+  // backend logic may change so this may eventually be dropped
   // need to add all device messages
   const send = {
-    createRoom: (name)         => rawSend.createRoom(name).then(refreshRooms),
-    deleteRoom: (id)           => rawSend.deleteRoom(id).then(refreshRooms),
-    renameRoom: (id, name)     => rawSend.renameRoom(id, name).then(refreshRooms),
-    deleteUser: (userName)     => rawSend.deleteUser(userName).then(refreshUsers),
-    promote:    (userName)     => rawSend.promote(userName).then(refreshUsers),
-    demote:     (userName)     => rawSend.demote(userName).then(refreshUsers),
+    createRoom: (name) => rawSend.createRoom(name).then(refreshRooms),
+    deleteRoom: (id) => rawSend.deleteRoom(id).then(refreshRooms),
+    renameRoom: (id, name) => rawSend.renameRoom(id, name).then(refreshRooms),
+    deleteUser: (userName) => rawSend.deleteUser(userName).then(refreshUsers),
+    promote: (userName) => rawSend.promote(userName).then(refreshUsers),
+    demote: (userName) => rawSend.demote(userName).then(refreshUsers),
   }
 
   return (
