@@ -9,32 +9,16 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, LayoutDashboard, Plus, X } from "lucide-react";
 import Input from "../components/common/Input";
+import { useSmartHouse } from "../context/SmartHouseContext";
 
-export default function AdminPanel({ send, currentUser, onLogout }) {
+export default function AdminPanel({ currentUser, onLogout }) {
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    const [users, setUsers] = useState([]);
-    const [rooms, setRooms] = useState([]);
+    const { users, rooms, send } = useSmartHouse();
     const [toast, setToast] = useState(null);
     const [isAddingRoom, setIsAddingRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState("");
     const navigate = useNavigate();
-
-    // fetch users and rooms
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const users = await send.getUsers();
-                const rooms = await send.getRooms();
-                setUsers(users);
-                setRooms(rooms);
-            } catch (err) {
-                setToast({ message: err.message, isError: true });
-            }
-        };
-
-        fetchData();
-    }, [])
 
     // confirm dialog handlers
     const openConfirm = ({ title, message, onConfirm }) => {
@@ -69,7 +53,6 @@ export default function AdminPanel({ send, currentUser, onLogout }) {
             onConfirm: async () => {
                 try {
                     await send.promote(user.username);
-                    setUsers(await send.getUsers());
                     setToast({ message: `${user.username} successfully promoted to Admin.` });
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
@@ -137,10 +120,7 @@ export default function AdminPanel({ send, currentUser, onLogout }) {
         }
     };
 
-    const roomSort = (a, b) => a.name - b.name;
-    const userSort = (a, b) => a.username - b.username;
-
-    const admins = users?.sort(userSort).filter((u) => u.type === "admin");
+    const admins = users?.filter((u) => u.type === "admin");
 
     return (
         <>
@@ -166,7 +146,7 @@ export default function AdminPanel({ send, currentUser, onLogout }) {
                         User Management
                     </h2>
                     <div className="space-y-3">
-                        {users?.sort(userSort).map((u) => (
+                        {users?.map((u) => (
                             <UserNameplate
                                 key={u.id}
                                 user={u}
@@ -197,7 +177,7 @@ export default function AdminPanel({ send, currentUser, onLogout }) {
                     </div>
                     <div>
                         <div className="space-y-3">
-                        {rooms.sort(roomSort).map((room) => (
+                        {rooms.map((room) => (
                             <RoomPlate
                                 key={room.id}
                                 room={room}
