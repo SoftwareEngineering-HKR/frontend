@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, XCircle, X } from "lucide-react";
 
-export default function Toast({ message, onDismiss, duration = 4000 }) {
+export default function Toast({ message, isError, onDismiss, duration = 4000 }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -29,7 +29,11 @@ export default function Toast({ message, onDismiss, duration = 4000 }) {
       role="status"
       aria-live="polite"
     >
-      <CheckCircle2 className="w-5 h-5 text-green-400 dark:text-green-600 flex-shrink-0" />
+      {isError
+        ? <XCircle className="w-5 h-5 text-red-400 dark:text-red-600 flex-shrink-0" />
+        : <CheckCircle2 className="w-5 h-5 text-green-400 dark:text-green-600 flex-shrink-0" />
+      }
+
       <span className="text-sm font-medium">{message}</span>
       <button
         onClick={() => {
