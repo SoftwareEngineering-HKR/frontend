@@ -3,20 +3,20 @@ import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
 import { useState, useEffect } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
 import Toast from "./components/common/Toast.jsx";
 import { useWebSocket } from "./hooks/useWebSocket.js";
 import { useAuth } from "./hooks/useAuth.js";
+import { SmartHouseProvider } from "./context/SmartHouseContext.jsx";
 
 function App() {
   const { currentUser, accessToken, logout, login, signup, loading, error } =
     useAuth();
-  // For the confirmation dialog when removing a device
-  // This should also be okay for confirming for example to delete users from the admin page
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [actionError, setActionError] = useState(null); // for WS action errors
   // Connects when logged in with accessToken, disconnects on logout
-  const { devices, connectionStatus, wsError, sendMessage, removeDevice } =
-    useWebSocket(!!currentUser, accessToken);
+  const { devices, connectionStatus, wsError, send } =
+    useWebSocket();
 
   // Listen for forced logout events from API (e.g., when token refresh fails)
   useEffect(() => {
@@ -41,7 +41,7 @@ function App() {
     const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
 
     try {
-      await sendMessage("update value", { deviceId, value: numericValue });
+      await send.deviceUpdate("update value", { deviceId, value: numericValue });
     } catch (error) {
       setActionError(error.message);
     }
@@ -77,8 +77,7 @@ function App() {
       onConfirm: async () => {
         closeConfirm();
         try {
-          await sendMessage("delete device", { id: deviceId });
-          removeDevice(deviceId); // To update the UI, since backend doesn't send an update after deleting
+          await send.deleteDevice(deviceId);
         } catch (error) {
           setActionError(error.message);
         }
@@ -105,47 +104,65 @@ function App() {
 
   return (
     <>
-      <Routes>
-        {/* Authentication Route */}
-        <Route
-          path="/authentication"
-          element={
-            currentUser ? (
-              <Navigate to="/overview" />
-            ) : (
-              <Authentication
-                login={login}
-                signup={signup}
-                loading={loading}
-                error={error}
-              />
-            )
-          }
-        />
+      <SmartHouseProvider
+        isLoggedIn={!!currentUser}
+        accessToken={accessToken}
+      >
+        <Routes>
+          {/* Authentication Route */}
+          <Route
+            path="/authentication"
+            element={
+              currentUser ? (
+                <Navigate to="/overview" />
+              ) : (
+                <Authentication
+                  login={login}
+                  signup={signup}
+                  loading={loading}
+                  error={error}
+                />
+              )
+            }
+          />
 
-        {/* Overview Route */}
-        <Route
-          path="/overview"
-          element={
-            currentUser ? (
-              <Overview
-                devices={devices}
-                connectionStatus={connectionStatus}
-                onLogout={handleLogout}
-                onDeviceAction={handleDeviceAction}
-                onRemoveDevice={handleRemoveDevice}
-                onAddDevice={handleAddDevice}
-                isAdmin={true} // Will need to be implemented properly when backend is ready
-              />
-            ) : (
-              <Navigate to="/authentication" />
-            )
-          }
-        />
+          {/* Overview Route */}
+          <Route
+            path="/overview"
+            element={
+              currentUser ? (
+                <Overview
+                  onLogout={handleLogout}
+                  onDeviceAction={handleDeviceAction}
+                  onRemoveDevice={handleRemoveDevice}
+                  onAddDevice={handleAddDevice}
+                  isAdmin={currentUser.isAdmin}
+                />
+              ) : (
+                <Navigate to="/authentication" />
+              )
+            }
+          />
 
-        {/* Redirect to authentication if user types an not used path*/}
-        <Route path="*" element={<Navigate to="/authentication" />} />
-      </Routes>
+          <Route
+            path="/admin"
+            element={
+              currentUser && currentUser.isAdmin ? 
+              (
+                <AdminPanel
+                  currentUser={currentUser}
+                  onLogout={handleLogout}
+                />
+              ) : (
+                <Navigate to="/authentication" />
+              )
+            }
+          />
+
+          {/* Redirect to authentication if user types an not used path*/}
+          <Route path="*" element={<Navigate to="/authentication" />} />
+        </Routes>
+      </SmartHouseProvider>
 
       <ConfirmDialog
         isOpen={!!confirmDialog}

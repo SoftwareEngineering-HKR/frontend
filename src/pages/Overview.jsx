@@ -6,19 +6,21 @@ import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import AddDeviceModal from "../components/dashboard/AddDeviceModal";
 import Toast from "../components/common/Toast";
+import { useSmartHouse } from "../context/SmartHouseContext";
 
 export default function Overview(props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const { devices } = useSmartHouse();
 
-  const filteredDevices = props.devices.filter(
+  const filteredDevices = devices.filter(
     (device) =>
       device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.room.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const connectedDeviceIds = props.devices.map((d) => d.id);
+  const connectedDeviceIds = devices.map((d) => d.id);
 
   const handleDeviceAdded = (newDevice) => {
     props.onAddDevice(newDevice);
@@ -31,7 +33,7 @@ export default function Overview(props) {
       <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
         {/* Header */}
         <Header
-          devices={props.devices}
+          devices={devices}
           onLogout={props.onLogout}
           isAdmin={props.isAdmin}
         />
