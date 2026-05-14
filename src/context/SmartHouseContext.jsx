@@ -1,32 +1,34 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useWebSocket } from "../hooks/useWebSocket";
+import { useAuth } from "./AuthContext";
 
 const SmartHouseContext = createContext(null);
 
-export function SmartHouseProvider({ isLoggedIn, accessToken, children }) {
-    const {
-      send: rawSend,
-      devices,
-      users,
-      rooms,
-      connectionStatus,
-      wsError
-    } = useWebSocket(isLoggedIn, accessToken);
+export function SmartHouseProvider({ children }) {
+  const { isLoggedIn, accessToken } = useAuth();
+  const {
+    send: rawSend,
+    devices,
+    users,
+    rooms,
+    connectionStatus,
+    wsError
+  } = useWebSocket(isLoggedIn, accessToken);
 
-    useEffect(() => {
-        if (connectionStatus !== "connected") return;
+  useEffect(() => {
+      if (connectionStatus !== "connected") return;
 
-        const init = async () => {
-            try {
-                await rawSend.getUsers();
-                await rawSend.getRooms();
-            } catch (err) {
-                console.error("Failed to fetch initial data:", err);
-            }
-        };
+      const init = async () => {
+          try {
+              await rawSend.getUsers();
+              await rawSend.getRooms();
+          } catch (err) {
+              console.error("Failed to fetch initial data:", err);
+          }
+      };
 
-        init();
-    }, [connectionStatus]);
+      init();
+  }, [connectionStatus]);
 
   const refreshUsers = async () => {
     await rawSend.getUsers();
@@ -40,7 +42,7 @@ export function SmartHouseProvider({ isLoggedIn, accessToken, children }) {
   // backend logic may change so this may eventually be dropped
   // need to add all device messages
   const send = {
-    ...rawSend,
+    deviceValueUpdate: (deviceId, value) => rawSend.deviceValueUpdate(deviceId, value),
     createRoom: (name) => rawSend.createRoom(name).then(refreshRooms),
     deleteRoom: (id) => rawSend.deleteRoom(id).then(refreshRooms),
     renameRoom: (id, name) => rawSend.renameRoom(id, name).then(refreshRooms),
@@ -50,7 +52,17 @@ export function SmartHouseProvider({ isLoggedIn, accessToken, children }) {
   }
 
   return (
-    <SmartHouseContext.Provider value={{ users, rooms, devices, send, connectionStatus, wsError }}>
+    <SmartHouseContext.Provider
+      value={
+        {
+          users,
+          rooms,
+          devices,
+          send,
+          connectionStatus,
+          wsError
+        }
+      }>
       {children}
     </SmartHouseContext.Provider>
   );
