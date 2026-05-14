@@ -56,7 +56,6 @@ function RangeSensorDisplay({ label, value, min, max }) {
 
 // 1 means active, 0 means inactive
 const BINARY_LABELS = {
-  photo: { detected: "Detected", clear: "Clear" },
   button: { detected: "Pressed", clear: "Released" },
   motion: { detected: "Motion Detected", clear: "No Motion" },
   tilt: { detected: "Tilted", clear: "Horizontal" },
