@@ -1,8 +1,8 @@
-const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window"];
+const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window", "fan"];
 const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness"];
 const BINARY_SENSOR_TYPES = ["button", "photo", "tilt", "motion"];
 const ALL_SENSOR_TYPES = [...SENSOR_TYPES, ...BINARY_SENSOR_TYPES];
-const SLIDER_TYPES = ["fan"];
+const SLIDER_TYPES = [];
 
 // Labels we use by device type
 const DEVICE_LABELS = {
@@ -47,7 +47,7 @@ export function mapBackendDevice(d) {
     room: d.room ?? "Unassigned",
     actions: [
       {
-        id: "main",
+        id: d.id,
         type: actionType,
         variant: BINARY_SENSOR_TYPES.includes(d.type) ? "binary" : "range",
         label: DEVICE_LABELS[d.type] ?? d.type,
