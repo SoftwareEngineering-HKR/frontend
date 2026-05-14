@@ -7,12 +7,15 @@ import { Plus } from "lucide-react";
 import AddDeviceModal from "../components/dashboard/AddDeviceModal";
 import Toast from "../components/common/Toast";
 import { useSmartHouse } from "../context/SmartHouseContext";
+import { useAuth } from "../context/AuthContext";
 
-export default function Overview(props) {
+export default function Overview() {
+  const { currentUser, logout } = useAuth();
+  const { devices, send, wsError } = useSmartHouse();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
-  const { devices } = useSmartHouse();
 
   const filteredDevices = devices.filter(
     (device) =>
@@ -22,10 +25,38 @@ export default function Overview(props) {
 
   const connectedDeviceIds = devices.map((d) => d.id);
 
-  const handleDeviceAdded = (newDevice) => {
-    props.onAddDevice(newDevice);
-    setIsAddModalOpen(false);
-    setToast({ message: `"${newDevice.name}" added to your dashboard.` });
+  // const handleDeviceAdded = (newDevice) => {
+  //   handleAddDevice(newDevice);
+  //   setIsAddModalOpen(false);
+  //   setToast({ message: `"${newDevice.name}" added to your dashboard.` });
+  // };
+
+  const handleDeviceAction = async (deviceId, value) => {
+    try {
+      console.log(devices[0])
+      await send.deviceValueUpdate(deviceId, value);
+    } catch (error) {
+      console.log("Device value update failed.");
+      setToast({ message: error.message, isError: true });
+    }
+  };
+
+  const handleRemoveDevice = (deviceId) => {
+    const device = devices.find((d) => d.id === deviceId);
+    if (!device) return;
+
+    openConfirm({
+      title: "Remove Device",
+      message: `Are you sure you want to remove "${device.name}"?`,
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          await send.deleteDevice(deviceId);
+        } catch (error) {
+          setActionError(error.message);
+        }
+      },
+    });
   };
 
   return (
@@ -34,8 +65,8 @@ export default function Overview(props) {
         {/* Header */}
         <Header
           devices={devices}
-          onLogout={props.onLogout}
-          isAdmin={props.isAdmin}
+          onLogout={logout}
+          isAdmin={currentUser.isAdmin}
         />
 
         {/* Main Content */}
@@ -48,7 +79,7 @@ export default function Overview(props) {
                 setSearchQuery={setSearchQuery}
               />
             </div>
-            {props.isAdmin && (
+            {currentUser.isAdmin && (
               <Button
                 text="Add Device"
                 variant="primary"
@@ -70,9 +101,9 @@ export default function Overview(props) {
           ) : (
             <DeviceList
               filteredDevices={filteredDevices}
-              onDeviceAction={props.onDeviceAction}
-              onRemoveDevice={props.onRemoveDevice}
-              isAdmin={props.isAdmin}
+              onDeviceAction={handleDeviceAction}
+              onRemoveDevice={handleRemoveDevice}
+              isAdmin={currentUser.isAdmin}
             />
           )}
         </main>
@@ -81,7 +112,7 @@ export default function Overview(props) {
       <AddDeviceModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleDeviceAdded}
+        //onAdd={handleAddDevice}
         connectedDeviceIds={connectedDeviceIds}
       />
 
