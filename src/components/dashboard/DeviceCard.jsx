@@ -3,10 +3,10 @@ import ToggleControl from "./ActionControls/ToggleControl";
 import SliderControl from "./ActionControls/SliderControl";
 import SensorDisplay from "./ActionControls/SensorDisplay";
 import { useState, useEffect } from "react";
-import { Wifi, WifiOff, Trash2, Calculator } from "lucide-react";
+import { Wifi, WifiOff, Trash2, CircleQuestionMark } from "lucide-react";
 
 export default function DeviceCard({ device, onAction }) {
-  const Icon = deviceIcons[device.type] ?? Calculator; // just fallback icon
+  const Icon = deviceIcons[device.type] ?? CircleQuestionMark;
 
   return (
     <div
