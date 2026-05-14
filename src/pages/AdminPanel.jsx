@@ -101,7 +101,6 @@ export default function AdminPanel() {
                     setToast({ message: `"${room.name}" deleted.` });
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
-                    console.log("error deleting room");
                 }
                 closeConfirm();
             }

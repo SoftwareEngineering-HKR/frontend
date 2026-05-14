@@ -24,10 +24,8 @@ export default function Overview() {
 
   const handleDeviceAction = async (deviceId, value) => {
     try {
-      console.log(devices[0])
       await send.deviceValueUpdate(deviceId, value);
     } catch (error) {
-      console.log("Device value update failed.");
       setToast({ message: error.message, isError: true });
     }
   };
