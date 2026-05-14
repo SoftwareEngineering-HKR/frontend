@@ -42,7 +42,7 @@ export function mapBackendDevice(d) {
   // The device we return to use in the frontend
   return {
     id: d.id,
-    name: d.name ?? `${displayType} (${d.id})`,
+    name: d.name ?? `${displayType}`,
     type: d.type,
     isOnline: d.online,
     room: d.room ?? "Unassigned",
