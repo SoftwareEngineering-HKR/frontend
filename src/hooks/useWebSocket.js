@@ -85,7 +85,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
   }, [isLoggedIn, accessToken]);
 
   // only for device value updates
-  function sendDeviceUpdate(deviceId, value) {
+  function sendDeviceValueUpdate(deviceId, value) {
     return new Promise((resolve, reject) => {
       if (wsRef.current?.readyState !== WebSocket.OPEN) {
         reject(new Error("Not connected to server"));
@@ -93,12 +93,13 @@ export function useWebSocket(isLoggedIn, accessToken) {
       }
 
       const timerId = setTimeout(() => {
-        delete pendingRef.current[params.deviceId];
+        delete pendingRef.current[deviceId];
         reject(new Error("Device did not respond in time"));
       }, UPDATE_TIMEOUT_MS);
 
       pendingRef.current[deviceId] = { timerId, resolve, reject };
-      wsRef.current.send(JSON.stringify(BUILDERS["update value"]({ deviceId, value })));
+      const messageToSend = JSON.stringify(BUILDERS["update value"]({ deviceId, value }));
+      wsRef.current.send(messageToSend);
     });
   }
 
@@ -124,7 +125,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
   }, []);
 
   const send = {
-    deviceUpdate: (deviceId, value) => sendDeviceUpdate(deviceId, value),
+    deviceValueUpdate: (deviceId, value) => sendDeviceValueUpdate(deviceId, value),
     getUsers: () => sendMessage("get users"),
     promote: (name) => sendMessage("update user role", { name, role: "admin" }),
     demote: (name) => sendMessage("update user role", { name, role: "user" }),
