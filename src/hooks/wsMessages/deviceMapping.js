@@ -1,5 +1,5 @@
 const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window", "fan"];
-const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness", "temperature"];
+const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness", "temperature", "distance"];
 const BINARY_SENSOR_TYPES = ["button", "tilt", "motion"];
 const ALL_SENSOR_TYPES = [...SENSOR_TYPES, ...BINARY_SENSOR_TYPES];
 const SLIDER_TYPES = [];
