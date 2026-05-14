@@ -30,24 +30,6 @@ export default function Overview() {
     }
   };
 
-  const handleRemoveDevice = (deviceId) => {
-    const device = devices.find((d) => d.id === deviceId);
-    if (!device) return;
-
-    openConfirm({
-      title: "Remove Device",
-      message: `Are you sure you want to remove "${device.name}"?`,
-      onConfirm: async () => {
-        closeConfirm();
-        try {
-          await send.deleteDevice(deviceId);
-        } catch (error) {
-          setActionError(error.message);
-        }
-      },
-    });
-  };
-
   return (
     <>
       <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
@@ -83,8 +65,6 @@ export default function Overview() {
             <DeviceList
               filteredDevices={filteredDevices}
               onDeviceAction={handleDeviceAction}
-              onRemoveDevice={handleRemoveDevice}
-              isAdmin={currentUser.isAdmin}
             />
           )}
         </main>

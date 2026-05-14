@@ -5,8 +5,7 @@ import SensorDisplay from "./ActionControls/SensorDisplay";
 import { useState, useEffect } from "react";
 import { Wifi, WifiOff, Trash2, Calculator } from "lucide-react";
 
-export default function DeviceCard(props) {
-  const { device, isAdmin } = props;
+export default function DeviceCard({ device, onAction }) {
   const Icon = deviceIcons[device.type] ?? Calculator; // just fallback icon
 
   return (
@@ -74,7 +73,7 @@ export default function DeviceCard(props) {
                   action={action}
                   deviceId={device.id}
                   isOnline={device.isOnline}
-                  onAction={props.onAction}
+                  onAction={onAction}
                 />
               );
             if (action.type === "sensor")
@@ -92,7 +91,7 @@ export default function DeviceCard(props) {
                   action={action}
                   deviceId={device.id}
                   isOnline={device.isOnline}
-                  onAction={props.onAction}
+                  onAction={onAction}
                 />
               );
             return null;
