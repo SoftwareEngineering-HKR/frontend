@@ -4,7 +4,6 @@ import DeviceList from "../components/dashboard/DeviceList";
 import Button from "../components/common/Button";
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import AddDeviceModal from "../components/dashboard/AddDeviceModal";
 import Toast from "../components/common/Toast";
 import { useSmartHouse } from "../context/SmartHouseContext";
 import { useAuth } from "../context/AuthContext";
@@ -22,14 +21,6 @@ export default function Overview() {
       device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.room.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-
-  const connectedDeviceIds = devices.map((d) => d.id);
-
-  // const handleDeviceAdded = (newDevice) => {
-  //   handleAddDevice(newDevice);
-  //   setIsAddModalOpen(false);
-  //   setToast({ message: `"${newDevice.name}" added to your dashboard.` });
-  // };
 
   const handleDeviceAction = async (deviceId, value) => {
     try {
@@ -79,14 +70,6 @@ export default function Overview() {
                 setSearchQuery={setSearchQuery}
               />
             </div>
-            {currentUser.isAdmin && (
-              <Button
-                text="Add Device"
-                variant="primary"
-                icon={<Plus className="w-5 h-5" />}
-                onClick={() => setIsAddModalOpen(true)}
-              />
-            )}
           </div>
 
           {/* Devices List */}
@@ -108,13 +91,6 @@ export default function Overview() {
           )}
         </main>
       </div>
-
-      <AddDeviceModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        //onAdd={handleAddDevice}
-        connectedDeviceIds={connectedDeviceIds}
-      />
 
       {toast && (
         <Toast message={toast.message} onDismiss={() => setToast(null)} />
