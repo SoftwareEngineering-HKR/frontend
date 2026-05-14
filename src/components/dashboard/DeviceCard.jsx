@@ -45,15 +45,6 @@ export default function DeviceCard(props) {
               </p>
             </div>
           </div>
-          {isAdmin && (
-            <button
-              onClick={() => props.onRemove(device.id)}
-              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              title="Remove device"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
         </div>
 
         {/* Online / Offline */}
