@@ -28,7 +28,7 @@ export default function ToggleControl({
         </span>
       </div>
       <button
-        onClick={() => onAction(deviceId, action.id, isOn ? 0 : 1)}
+        onClick={() => onAction(deviceId, isOn ? 0 : 1)}
         disabled={!isOnline}
         className={`
           relative inline-flex h-6 w-11 items-center rounded-full transition-colors

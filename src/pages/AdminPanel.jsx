@@ -10,8 +10,10 @@ import { useNavigate } from "react-router-dom";
 import { Settings, LayoutDashboard, Plus, X } from "lucide-react";
 import Input from "../components/common/Input";
 import { useSmartHouse } from "../context/SmartHouseContext";
+import { useAuth } from "../context/AuthContext";
 
-export default function AdminPanel({ currentUser, onLogout }) {
+export default function AdminPanel() {
+    const { currentUser, logout } = useAuth();
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const { users, rooms, send } = useSmartHouse();
@@ -99,7 +101,6 @@ export default function AdminPanel({ currentUser, onLogout }) {
                     setToast({ message: `"${room.name}" deleted.` });
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
-                    console.log("error deleting room");
                 }
                 closeConfirm();
             }
@@ -129,7 +130,7 @@ export default function AdminPanel({ currentUser, onLogout }) {
                 title="Admin Panel"
                 subtitle={`${users.length} total user(s) · ${admins.length} admin(s)`}
                 icon={<Settings className="w-6 h-6 text-white"/>}
-                onLogout={onLogout}
+                onLogout={logout}
                 actions={
                     <Button
                         text="Back to Overview"

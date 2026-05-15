@@ -30,8 +30,6 @@ function buildUpdateRole({ name, role }) {
 }
 
 function buildDeleteUser({ name }) {
-  console.log("called delete user!");
-  console.log(name);
   return {
     type: "delete user",
     payload: 

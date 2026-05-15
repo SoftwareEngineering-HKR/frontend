@@ -1,8 +1,8 @@
-const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window"];
-const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness"];
-const BINARY_SENSOR_TYPES = ["button", "photo", "tilt", "motion"];
+const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window", "fan"];
+const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness", "temperature", "distance"];
+const BINARY_SENSOR_TYPES = ["button", "tilt", "motion"];
 const ALL_SENSOR_TYPES = [...SENSOR_TYPES, ...BINARY_SENSOR_TYPES];
-const SLIDER_TYPES = ["fan"];
+const SLIDER_TYPES = [];
 
 // Labels we use by device type
 const DEVICE_LABELS = {
@@ -17,9 +17,10 @@ const DEVICE_LABELS = {
   fan: "Fan Speed",
   door: "Door",
   window: "Window",
-  photo: "Photo Sensor",
   tilt: "Tilt",
   brightness: "Brightness",
+  temperature: "Temperature",
+  display: "Text on Screen"
 };
 
 // Map backend device format to our components
@@ -41,13 +42,13 @@ export function mapBackendDevice(d) {
   // The device we return to use in the frontend
   return {
     id: d.id,
-    name: d.name ?? `${displayType} (${d.id})`,
+    name: d.name ?? `${displayType}`,
     type: d.type,
     isOnline: d.online,
     room: d.room ?? "Unassigned",
     actions: [
       {
-        id: "main",
+        id: d.id,
         type: actionType,
         variant: BINARY_SENSOR_TYPES.includes(d.type) ? "binary" : "range",
         label: DEVICE_LABELS[d.type] ?? d.type,

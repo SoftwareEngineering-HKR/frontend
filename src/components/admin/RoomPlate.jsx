@@ -14,7 +14,7 @@ export default function RoomPlate({ room, onRename, onDelete }) {
   };
 
   const handleCancel = () => {
-    setValue(room);
+    setValue(room.name);
     setIsEditing(false);
   };
 
