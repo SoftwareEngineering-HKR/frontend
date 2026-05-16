@@ -26,11 +26,7 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
         ? {
             ...d,
             actions: d.actions.map((a) => {
-              if (a.type === "toggle")
-                return { ...a, value: content === 1 ? 1 : 0 };
-              if (a.type === "slider") return { ...a, value: Number(content) };
-              if (a.type === "sensor") return { ...a, value: Number(content) };
-              return a;
+              return {...a, value: Number(content)};
             }),
           }
         : d,
@@ -45,17 +41,43 @@ function handleDeviceOnlineState(payload, { setDevices }) {
   );
 }
 
-// Errors are on 403/500
-function handleActionResponse(payload, { pendingRef, setWsError }) {
-  const { statusCode, message: errorMsg } = payload;
-  if (statusCode === 200) return;
-  Object.keys(pendingRef.current).forEach((deviceId) => {
-    const p = pendingRef.current[deviceId];
-    clearTimeout(p.timerId);
-    p.reject(new Error(errorMsg));
-    delete pendingRef.current[deviceId];
-  });
-  setWsError(errorMsg);
+function handleActionResponse(payload, { pendingRef, setWsError, actionResponseRef }) {
+  const { statusCode, message } = payload;
+  
+  // for when the "action response" is about a device error
+  const devicePendings = Object.keys(pendingRef.current);
+  if (devicePendings.length > 0) {
+    devicePendings.forEach((deviceId) => {
+      const p = pendingRef.current[deviceId];
+      clearTimeout(p.timerId);
+      p.reject(new Error(msg));
+      delete pendingRef.current[deviceId];
+    });
+    setWsError(msg);
+    return;
+  }
+  
+  // for all normal "action response" cases
+  const next = actionResponseRef.current.shift();
+  if (!next) return;
+
+  if (statusCode === 200) {
+    next.resolve({ statusCode, message });
+  } else {
+    next.reject(new Error(message));
+  }
+}
+
+function handleUsers(payload, { setUsers, actionResponseRef }) {
+  setUsers(payload.users);
+  const next = actionResponseRef.current.shift();
+  next?.resolve(payload.users);
+}
+
+function handleRooms(payload, { setRooms, actionResponseRef }) {
+  setRooms(payload.rooms);
+  const next = actionResponseRef.current.shift();
+  next?.resolve(payload.rooms);
 }
 
 // To map incoming message type strings to handler functions
@@ -63,5 +85,7 @@ export const HANDLERS = {
   "inital devices": handleInitialDevices,
   "update value": handleUpdateValue,
   "action response": handleActionResponse,
+  "users": handleUsers,
+  "rooms": handleRooms,
   "update device onlineState": handleDeviceOnlineState,
 };

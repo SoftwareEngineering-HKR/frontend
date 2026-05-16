@@ -3,11 +3,10 @@ import ToggleControl from "./ActionControls/ToggleControl";
 import SliderControl from "./ActionControls/SliderControl";
 import SensorDisplay from "./ActionControls/SensorDisplay";
 import { useState, useEffect } from "react";
-import { Wifi, WifiOff, Trash2, Calculator } from "lucide-react";
+import { Wifi, WifiOff, Trash2, CircleQuestionMark } from "lucide-react";
 
-export default function DeviceCard(props) {
-  const { device, isAdmin } = props;
-  const Icon = deviceIcons[device.type] ?? Calculator; // just fallback icon
+export default function DeviceCard({ device, onAction }) {
+  const Icon = deviceIcons[device.type] ?? CircleQuestionMark;
 
   return (
     <div
@@ -45,15 +44,6 @@ export default function DeviceCard(props) {
               </p>
             </div>
           </div>
-          {isAdmin && (
-            <button
-              onClick={() => props.onRemove(device.id)}
-              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              title="Remove device"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
         </div>
 
         {/* Online / Offline */}
@@ -83,7 +73,7 @@ export default function DeviceCard(props) {
                   action={action}
                   deviceId={device.id}
                   isOnline={device.isOnline}
-                  onAction={props.onAction}
+                  onAction={onAction}
                 />
               );
             if (action.type === "sensor")
@@ -101,7 +91,7 @@ export default function DeviceCard(props) {
                   action={action}
                   deviceId={device.id}
                   isOnline={device.isOnline}
-                  onAction={props.onAction}
+                  onAction={onAction}
                 />
               );
             return null;

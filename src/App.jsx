@@ -3,169 +3,65 @@ import Authentication from "./pages/Authentication.jsx";
 import Overview from "./pages/Overview.jsx";
 import { useState, useEffect } from "react";
 import ConfirmDialog from "./components/common/ConfirmDialog.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
 import Toast from "./components/common/Toast.jsx";
 import { useWebSocket } from "./hooks/useWebSocket.js";
-import { useAuth } from "./hooks/useAuth.js";
+import { SmartHouseProvider } from "./context/SmartHouseContext.jsx";
+import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 
 function App() {
-  const { currentUser, accessToken, logout, login, signup, loading, error } =
-    useAuth();
-  // For the confirmation dialog when removing a device
-  // This should also be okay for confirming for example to delete users from the admin page
-  const [confirmDialog, setConfirmDialog] = useState(null);
-  const [actionError, setActionError] = useState(null); // for WS action errors
-  // Connects when logged in with accessToken, disconnects on logout
-  const { devices, connectionStatus, wsError, sendMessage, removeDevice } =
-    useWebSocket(!!currentUser, accessToken);
-
-  // Listen for forced logout events from API (e.g., when token refresh fails)
-  useEffect(() => {
-    const handleLogoutRequired = async () => {
-      console.log("[App] Forced logout triggered (token refresh failed)");
-      await logout();
-    };
-
-    window.addEventListener("logout-required", handleLogoutRequired);
-    return () =>
-      window.removeEventListener("logout-required", handleLogoutRequired);
-  }, [logout]);
-
-  const handleLogout = async () => {
-    await logout();
-  };
-
-  const handleDeviceAction = async (deviceId, actionId, value) => {
-    if (!currentUser) return;
-
-    // Connvert boolean to number for easier handling in the backend, as all devices expect numeric values
-    const numericValue = typeof value === "boolean" ? (value ? 1 : 0) : value;
-
-    try {
-      await sendMessage("update value", { deviceId, value: numericValue });
-    } catch (error) {
-      setActionError(error.message);
-    }
-  };
-
-  /* Will be removed later
-
-  // temp handler to add device only to admins
-  // will be replaced with some proper API call
-  const handleAddDevice = (newDevice) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => {
-        if (user.role === "admin") {
-          return {
-            ...user,
-            devices: [...user.devices, newDevice],
-          };
-        }
-        return user;
-      }),
-    );
-  }; */
-
-  const handleRemoveDevice = (deviceId) => {
-    if (!currentUser) return;
-
-    const device = devices.find((d) => d.id === deviceId);
-    if (!device) return;
-
-    openConfirm({
-      title: "Remove Device",
-      message: `Are you sure you want to remove "${device.name}"?`,
-      onConfirm: async () => {
-        closeConfirm();
-        try {
-          await sendMessage("delete device", { id: deviceId });
-          removeDevice(deviceId); // To update the UI, since backend doesn't send an update after deleting
-        } catch (error) {
-          setActionError(error.message);
-        }
-      },
-    });
-  };
-
-  // Temporary to not break everything when removing devices - will fix when backend is fully implemented
-  const handleAddDevice = (newDevice) => {
-    console.log("Add device not yet supported by backend", newDevice);
-  };
-
-  const openConfirm = ({ title, message, onConfirm }) => {
-    setConfirmDialog({
-      title,
-      message,
-      onConfirm,
-    });
-  };
-
-  const closeConfirm = () => {
-    setConfirmDialog(null);
-  };
-
   return (
     <>
-      <Routes>
-        {/* Authentication Route */}
-        <Route
-          path="/authentication"
-          element={
-            currentUser ? (
-              <Navigate to="/overview" />
-            ) : (
-              <Authentication
-                login={login}
-                signup={signup}
-                loading={loading}
-                error={error}
-              />
-            )
-          }
-        />
-
-        {/* Overview Route */}
-        <Route
-          path="/overview"
-          element={
-            currentUser ? (
-              <Overview
-                devices={devices}
-                connectionStatus={connectionStatus}
-                onLogout={handleLogout}
-                onDeviceAction={handleDeviceAction}
-                onRemoveDevice={handleRemoveDevice}
-                onAddDevice={handleAddDevice}
-                isAdmin={true} // Will need to be implemented properly when backend is ready
-              />
-            ) : (
-              <Navigate to="/authentication" />
-            )
-          }
-        />
-
-        {/* Redirect to authentication if user types an not used path*/}
-        <Route path="*" element={<Navigate to="/authentication" />} />
-      </Routes>
-
-      <ConfirmDialog
-        isOpen={!!confirmDialog}
-        title={confirmDialog?.title}
-        message={confirmDialog?.message}
-        onConfirm={confirmDialog?.onConfirm}
-        onCancel={closeConfirm}
-      />
-
-      {/* Shows WebSocket errors like device timeout, access denied, ... */}
-      {(actionError || wsError) && (
-        <Toast
-          message={actionError ?? wsError}
-          onDismiss={() => {
-            setActionError(null);
-          }}
-        />
-      )}
+      <AuthProvider>
+        <SmartHouseProvider>
+          <AppRoutes/>
+        </SmartHouseProvider>
+      </AuthProvider>
     </>
   );
+}
+
+function AppRoutes() {
+  const { currentUser } = useAuth();
+ 
+  return (
+    <Routes>
+      {/* Authentication Route */}
+      <Route
+        path="/authentication"
+        element={ currentUser ? <Navigate to="/overview" /> : <Authentication/> }
+      />
+
+      {/* Overview Route */}
+      <Route
+        path="/overview"
+        element={ <ProtectedRoute> <Overview/> </ProtectedRoute> }
+      />
+
+      {/* Admin Panel Route */}
+      <Route
+        path="/admin"
+        element={ <ProtectedRoute adminOnly> <AdminPanel/> </ProtectedRoute> }
+      />
+
+      {/* Redirect to authentication if user types a not used path*/}
+      <Route path="*" element={<Navigate to="/authentication" />} />
+    </Routes>
+  );
+}
+
+function ProtectedRoute({ children, adminOnly = false }) {
+  const { currentUser } = useAuth();
+ 
+  if (!currentUser) {
+    return <Navigate to="/authentication" />
+  };
+
+  if (adminOnly && !currentUser.isAdmin) {
+    return <Navigate to="/overview" />;
+  }
+ 
+  return children;
 }
 
 export default App;

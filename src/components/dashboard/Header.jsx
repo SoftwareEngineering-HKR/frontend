@@ -1,9 +1,17 @@
-import LogoutButton from "../auth/LogOutButton";
-import { Home, Users, LogOut } from "lucide-react";
+import { Home, LogOut, MonitorCog } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Button from "../common/Button";
 
-export default function Header(props) {
-  const onlineCount = props.devices.filter((d) => d.isOnline).length;
-  const offlineCount = props.devices.filter((d) => !d.isOnline).length;
+export default function Header({ devices, isAdmin, onLogout, title="Smart Home", subtitle, icon=<Home className="w-6 h-6 text-white" />, actions }) {
+  const onlineCount = devices?.filter((d) => d.isOnline).length ?? 0;
+  const offlineCount = devices?.filter((d) => !d.isOnline).length ?? 0;
+
+  // device count if in Overview, user count if in Admin Panel
+  if (!subtitle) {
+    subtitle = `${onlineCount} online · ${offlineCount} offline`;
+  }
+  
+  const navigate = useNavigate();
 
   return (
     <>
@@ -12,31 +20,36 @@ export default function Header(props) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <Home className="w-6 h-6 text-white" />
+                {icon}
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Smart Home
+                  {title}
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {onlineCount} online · {offlineCount} offline
+                  {subtitle}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {props.isAdmin && (
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                  <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Manage Users</span>
-                </button>
+              { actions ?? (
+                <>
+                  {isAdmin && (
+                    <Button
+                      text="Admin Panel"
+                      icon={<MonitorCog className="w-4 h-4"/>}
+                      onClick={() => navigate("/admin")}
+                      variant="ghost"
+                    />
+                  )}
+                </>
               )}
-              <button
-                onClick={props.onLogout}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
+              <Button
+                text="Log Out"
+                icon={<LogOut className="w-4 h-4"/>}
+                onClick={onLogout}
+                variant="ghost"
+              />
             </div>
           </div>
         </div>

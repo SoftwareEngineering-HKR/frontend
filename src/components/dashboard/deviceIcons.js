@@ -9,10 +9,12 @@ import {
   Squircle,
   DoorClosed,
   Grid2X2,
-  Scan,
-  Camera,
   Sun,
   Move,
+  Cog,
+  Thermometer,
+  Ruler,
+  Monitor,
 } from "lucide-react";
 
 export const deviceIcons = {
@@ -21,13 +23,15 @@ export const deviceIcons = {
   gas: Flame,
   humidity: Droplets,
   steam: Wind,
-  servo: Scan, // no perfect icon for servo, using scan as a placeholder
+  servo: Cog,
   buzz: Volume2,
   motion: Move,
   button: Squircle,
   door: DoorClosed,
   window: Grid2X2,
-  photo: Camera,
   tilt: Activity,
   brightness: Sun,
+  temperature: Thermometer,
+  distance: Ruler,
+  display: Monitor,
 };

@@ -10,14 +10,25 @@ const UPDATE_TIMEOUT_MS = 5000;
 
 export function useWebSocket(isLoggedIn, accessToken) {
   const [devices, setDevices] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState("disconnected"); // "disconnected" | "connecting" | "connected"
   const [wsError, setWsError] = useState(null);
 
+  // references
   const wsRef = useRef(null);
-  // Tracks in-flight update commands: deviceId -> { timerId, resolve, reject }
-  // If the backend confirms the update with an "update value" message (from handler), we call resolve() and clear the timeout
-  // If we get an "action response" error message (from handler) or the timeout triggers, we call reject() and clear the pending command
   const pendingRef = useRef({});
+  const actionResponseRef = useRef([]);
+
+  // context to pass to all handlers
+  const handlerContext = {
+    setDevices,
+    setUsers,
+    setRooms,
+    setWsError,
+    pendingRef,
+    actionResponseRef
+  };
 
   // When user logs in with a valid token, it connects to WS; on logout, it disconnects
   useEffect(() => {
@@ -52,7 +63,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
       const handler = HANDLERS[message.type];
       if (handler) {
-        handler(message.payload, { setDevices, setWsError, pendingRef });
+        handler(message.payload, handlerContext);
       } else {
         console.warn("Unknown WebSocket message type:", message.type);
       }
@@ -73,41 +84,68 @@ export function useWebSocket(isLoggedIn, accessToken) {
     };
   }, [isLoggedIn, accessToken]);
 
-  const sendMessage = useCallback((type, params) => {
+  // only for device value updates
+  function sendDeviceValueUpdate(deviceId, value) {
     return new Promise((resolve, reject) => {
       if (wsRef.current?.readyState !== WebSocket.OPEN) {
         reject(new Error("Not connected to server"));
         return;
       }
 
-      const builder = BUILDERS[type];
-      if (!builder) {
-        reject(new Error(`No builder registered for message type: "${type}"`));
-        return;
-      }
+      const timerId = setTimeout(() => {
+        delete pendingRef.current[deviceId];
+        reject(new Error("Device did not respond in time"));
+      }, UPDATE_TIMEOUT_MS);
 
-      wsRef.current.send(JSON.stringify(builder(params)));
-
-      // Only set up a timeout for messages that expect a confirmation back from a device.
-      // For device updates, if no "update value" comes back within the timeout, we assume the device failed.
-      // Other messages (like room or device management) don't have backend responses yet,
-      // so we resolve them immediately for now and can change when/if the backend implements those.
-      if (params.deviceId) {
-        const timerId = setTimeout(() => {
-          delete pendingRef.current[params.deviceId];
-          reject(new Error("Device did not respond in time"));
-        }, UPDATE_TIMEOUT_MS);
-        pendingRef.current[params.deviceId] = { timerId, resolve, reject };
-      } else {
-        resolve();
-      }
+      pendingRef.current[deviceId] = { timerId, resolve, reject };
+      const messageToSend = JSON.stringify(BUILDERS["update value"]({ deviceId, value }));
+      wsRef.current.send(messageToSend);
     });
-  }, []);
+  }
+
+  // for all other types of messages that get an "action response" reply
+  async function sendMessage(type, params) {
+    if (wsRef.current?.readyState !== WebSocket.OPEN) {
+      throw new Error("Not connected to server");
+    }
+
+    const builder = BUILDERS[type];
+    if (!builder) throw new Error(`No builder for "${type}"`);
+
+    return new Promise((resolve, reject) => {
+      actionResponseRef.current.push({ resolve, reject });
+      wsRef.current.send(JSON.stringify(builder(params)));
+    });
+  }
+
 
   // To handle device removal in the UI after sending the delete command
   const removeDevice = useCallback((deviceId) => {
     setDevices((prev) => prev.filter((d) => d.id !== deviceId));
   }, []);
 
-  return { devices, connectionStatus, wsError, sendMessage, removeDevice };
+  const send = {
+    deviceValueUpdate: (deviceId, value) => sendDeviceValueUpdate(deviceId, value),
+    getUsers: () => sendMessage("get users"),
+    promote: (name) => sendMessage("update user role", { name, role: "admin" }),
+    demote: (name) => sendMessage("update user role", { name, role: "user" }),
+    deleteUser: (name) => sendMessage("delete user", { name }),
+    getRooms: () => sendMessage("get all rooms"),
+    createRoom: (room) => sendMessage("create room", { room }),
+    deleteRoom: (id) => sendMessage("delete room", { id }),
+    renameRoom: (id, name) => sendMessage("update room", { id, name }),
+    deleteDevice: (id) => {
+      sendMessage("delete device", { id });
+      removeDevice(id); // To update the UI, since backend doesn't send an update after deleting
+    },
+  }
+
+  return {
+    send,
+    devices,
+    users,
+    rooms,
+    connectionStatus,
+    wsError,
+  };
 }
