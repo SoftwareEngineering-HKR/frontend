@@ -34,4 +34,5 @@ export const deviceIcons = {
   temperature: Thermometer,
   distance: Ruler,
   display: Monitor,
+  photo: Sun,
 };
