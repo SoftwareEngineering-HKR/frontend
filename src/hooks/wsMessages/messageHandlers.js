@@ -80,6 +80,11 @@ function handleRooms(payload, { setRooms, actionResponseRef }) {
   next?.resolve(payload.rooms);
 }
 
+function handleDeviceInfo(payload, { setDevices, actionResponseRef }) {
+  setDevices(payload.devices.map(mapBackendDevice));
+  const next = actionResponseRef.current.shift();
+  next?.resolve(payload.devices);
+}
 // To map incoming message type strings to handler functions
 export const HANDLERS = {
   "inital devices": handleInitialDevices,
@@ -87,5 +92,6 @@ export const HANDLERS = {
   "action response": handleActionResponse,
   "users": handleUsers,
   "rooms": handleRooms,
+  "device info": handleDeviceInfo,
   "update device onlineState": handleDeviceOnlineState,
 };
