@@ -11,6 +11,12 @@ function buildDeleteDevice({ id }) {
   return { type: "delete device", payload: { id } };
 }
 
+function buildGetDevices() {
+  return {
+    type: "get all device info",
+  };
+}
+
 // user builders
 function buildGetUsers() {
   return {
@@ -69,11 +75,31 @@ function buildDeleteRoom({ id }) {
 function buildRenameRoom({ id, name }) {
   return {
     type: "update room",
-    payload: 
+    payload:
       {
         id: id,
         name: name,
       }
+  }
+}
+
+function buildAddUserToDevice({ userId, deviceId }) {
+  return {
+    type: "add user to device",
+    payload: {
+      userId,
+      deviceId,
+    }
+  }
+}
+
+function buildDeleteUserFromDevice({ userId, deviceId }) {
+  return {
+    type: "delete user from device",
+    payload: {
+      deviceId,
+      userId,
+    }
   }
 }
 
@@ -89,4 +115,7 @@ export const BUILDERS = {
   "delete room": buildDeleteRoom,
   "update room": buildRenameRoom,
   "delete device": buildDeleteDevice,
+  "get all device info": buildGetDevices,
+  "add user to device": buildAddUserToDevice,
+  "delete user from device": buildDeleteUserFromDevice,
 };
