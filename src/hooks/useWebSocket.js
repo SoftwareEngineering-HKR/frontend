@@ -127,6 +127,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
   const send = {
     deviceValueUpdate: (deviceId, value) => sendDeviceValueUpdate(deviceId, value),
     getUsers: () => sendMessage("get users"),
+    getDevices: () => sendMessage("get all device info"),
     promote: (name) => sendMessage("update user role", { name, role: "admin" }),
     demote: (name) => sendMessage("update user role", { name, role: "user" }),
     deleteUser: (name) => sendMessage("delete user", { name }),
@@ -138,6 +139,8 @@ export function useWebSocket(isLoggedIn, accessToken) {
       sendMessage("delete device", { id });
       removeDevice(id); // To update the UI, since backend doesn't send an update after deleting
     },
+    assignUserToDevice: (userId, deviceId) => sendMessage("add user to device", { userId, deviceId }),
+    unassignUserFromDevice: (userId, deviceId) => sendMessage("delete user from device", { userId, deviceId }),
   }
 
   return {
