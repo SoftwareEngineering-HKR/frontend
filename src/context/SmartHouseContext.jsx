@@ -22,6 +22,7 @@ export function SmartHouseProvider({ children }) {
           try {
               await rawSend.getUsers();
               await rawSend.getRooms();
+              await rawSend.getDevices();
           } catch (err) {
               console.error("Failed to fetch initial data:", err);
           }
@@ -38,17 +39,24 @@ export function SmartHouseProvider({ children }) {
     await rawSend.getRooms();
   };
 
+  const refreshDevices = async () => {
+    await rawSend.getDevices();
+  };
+
   // this handles UI refreshes when something changes
   // backend logic may change so this may eventually be dropped
   // need to add all device messages
   const send = {
     deviceValueUpdate: (deviceId, value) => rawSend.deviceValueUpdate(deviceId, value),
+    getDevices: () => rawSend.getDevices(),
     createRoom: (name) => rawSend.createRoom(name).then(refreshRooms),
     deleteRoom: (id) => rawSend.deleteRoom(id).then(refreshRooms),
     renameRoom: (id, name) => rawSend.renameRoom(id, name).then(refreshRooms),
     deleteUser: (userName) => rawSend.deleteUser(userName).then(refreshUsers),
     promote: (userName) => rawSend.promote(userName).then(refreshUsers),
     demote: (userName) => rawSend.demote(userName).then(refreshUsers),
+    assignUserToDevice: (userId, deviceId) => rawSend.assignUserToDevice(userId, deviceId).then(refreshDevices),
+    unassignUserFromDevice: (userId, deviceId) => rawSend.unassignUserFromDevice(userId, deviceId).then(refreshDevices),
   }
 
   return (
