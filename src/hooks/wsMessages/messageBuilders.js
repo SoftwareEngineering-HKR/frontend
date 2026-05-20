@@ -86,6 +86,17 @@ function buildRenameRoom({ id, name }) {
   };
 }
 
+function buildUpdateDeviceRoom({ deviceId, roomId }) {
+  return {
+    type: "update device room",
+    payload: 
+      {
+        deviceId: deviceId,
+        roomId: roomId,
+      }
+  };
+}
+
 // BUILDER pairs
 // FORMAT | "message type": builderFunction
 export const BUILDERS = {
@@ -100,4 +111,5 @@ export const BUILDERS = {
   "delete device": buildDeleteDevice,
   "delete yourself from device": buildDeleteDeviceFromDashboard,
   "get all device info": buildGetAllDeviceInfo,
+  "update device room": buildUpdateDeviceRoom,
 };

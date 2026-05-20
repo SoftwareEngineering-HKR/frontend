@@ -53,7 +53,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
     };
 
     ws.onmessage = (event) => {
-      console.log("WS RAW:", event.data);
+      //console.log("WS RAW:", event.data);
       let message;
       try {
         message = JSON.parse(event.data);
@@ -154,6 +154,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
       removeDevice(id);
     },
     getDevices: () => sendMessage("get all device info"),
+    updateDeviceRoom: (deviceId, roomId) => sendMessage("update device room", { deviceId, roomId })
   }
 
   return {
