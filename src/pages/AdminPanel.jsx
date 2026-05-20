@@ -1,9 +1,9 @@
 import Header from "../components/dashboard/Header";
 import Button from "../components/common/Button";
 import Toast from "../components/common/Toast";
-import Modal from "../components/common/Modal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import UserNameplate from "../components/admin/UserNameplate";
+import UserModal from "../components/admin/UserModal";
 import RoomPlate from "../components/admin/RoomPlate";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,8 @@ export default function AdminPanel() {
     const { currentUser, logout } = useAuth();
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    const { users, rooms, send } = useSmartHouse();
+    const [selectedUser, setSelectedUser] = useState(null);
+    const { users, rooms, devices, send } = useSmartHouse();
     const [toast, setToast] = useState(null);
     const [isAddingRoom, setIsAddingRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState("");
@@ -43,7 +44,7 @@ export default function AdminPanel() {
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
                 }
-                closeConfirm();   
+                closeConfirm();
             }
         });
     }
@@ -58,8 +59,8 @@ export default function AdminPanel() {
                     setToast({ message: `${user.username} successfully promoted to Admin.` });
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
-                }   
-                closeConfirm();   
+                }
+                closeConfirm();
             }
         });
     }
@@ -72,13 +73,46 @@ export default function AdminPanel() {
                 try {
                     await send.deleteUser(user.username);
                     setToast({ message: `${user.username} successfully deleted from users.` });
+                    setIsUserModalOpen(false);
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
-                }   
-                closeConfirm();   
+                }
+                closeConfirm();
             }
         });
     }
+
+    const handleAssignDevice = (user, device) => {
+        openConfirm({
+            title: "Assign Device",
+            message: `Assign "${device.name}" to ${user.username}?`,
+            onConfirm: async () => {
+                try {
+                    await send.assignUserToDevice(user.id, device.id);
+                    setToast({ message: `"${device.name}" assigned to ${user.username}.` });
+                } catch (err) {
+                    setToast({ message: err.message, isError: true });
+                }
+                closeConfirm();
+            }
+        });
+    };
+
+    const handleUnassignDevice = (user, device) => {
+        openConfirm({
+            title: "Unassign Device",
+            message: `Remove "${device.name}" from ${user.username}?`,
+            onConfirm: async () => {
+                try {
+                    await send.unassignUserFromDevice(user.id, device.id);
+                    setToast({ message: `"${device.name}" removed from ${user.username}.` });
+                } catch (err) {
+                    setToast({ message: err.message, isError: true });
+                }
+                closeConfirm();
+            }
+        });
+    };
 
     // room handlers
     const handleRenameRoom = async (roomId, newName) => {
@@ -155,7 +189,10 @@ export default function AdminPanel() {
                                 onUpgrade={handleUpgrade}
                                 onDowngrade={handleDowngrade}
                                 onDelete={handleDeleteUser}
-                                onClick={() => setIsUserModalOpen(true)} 
+                                onClick={() => {
+                                    setSelectedUser(u);
+                                    setIsUserModalOpen(true);
+                                }}
                             />
                         ))}
                     </div>
@@ -227,13 +264,18 @@ export default function AdminPanel() {
         </div>
 
         {/* This Modal should be replaced with the UserModal */ }
-        <Modal
+        <UserModal
             isOpen={isUserModalOpen}
             onClose={() => setIsUserModalOpen(false)}
-            title={"User Modal placeholder"}
-        >
-            <span className="text-gray-700 dark:text-gray-300">Some modal content</span>
-        </Modal>
+            user={selectedUser}
+            devices={devices}
+            currentUser={currentUser}
+            onAssign={handleAssignDevice}
+            onUnassign={handleUnassignDevice}
+            onUpgrade={handleUpgrade}
+            onDowngrade={handleDowngrade}
+            onDelete={handleDeleteUser}
+        />
     
         {toast && (
             <Toast
