@@ -3,6 +3,7 @@ import ToggleControl from "./ActionControls/ToggleControl";
 import SliderControl from "./ActionControls/SliderControl";
 import SensorDisplay from "./ActionControls/SensorDisplay";
 import DisplayControl from "./ActionControls/DisplayControl";
+import BuzzerControl from "./ActionControls/BuzzerControl";
 import { Wifi, WifiOff, Trash2, CircleQuestionMark } from "lucide-react";
 
 export default function DeviceCard({ device, onAction }) {
@@ -97,6 +98,16 @@ export default function DeviceCard({ device, onAction }) {
             if (action.type === "display")
               return (
                 <DisplayControl
+                  key={action.id}
+                  action={action}
+                  deviceId={device.id}
+                  isOnline={device.isOnline}
+                  onAction={onAction}
+                />
+              );
+            if (action.type === "buzzer")
+              return (
+                <BuzzerControl
                   key={action.id}
                   action={action}
                   deviceId={device.id}

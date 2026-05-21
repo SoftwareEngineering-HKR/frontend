@@ -1,4 +1,4 @@
-const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window", "fan"];
+const TOGGLE_TYPES = ["light", "servo", "door", "window", "fan"];
 const SENSOR_TYPES = [
   "gas",
   "steam",
@@ -10,6 +10,7 @@ const SENSOR_TYPES = [
 const BINARY_SENSOR_TYPES = ["button", "tilt", "motion"];
 const ALL_SENSOR_TYPES = [...SENSOR_TYPES, ...BINARY_SENSOR_TYPES];
 const SLIDER_TYPES = [];
+const BUZZER_TYPES = ["buzz"];
 const DISPLAY_TYPES = ["display"];
 
 // Labels we use by device type
@@ -51,6 +52,7 @@ export function mapBackendDevice(d) {
   if (TOGGLE_TYPES.includes(d.type)) actionType = "toggle";
   else if (ALL_SENSOR_TYPES.includes(d.type)) actionType = "sensor";
   else if (SLIDER_TYPES.includes(d.type)) actionType = "slider";
+  else if (BUZZER_TYPES.includes(d.type)) actionType = "buzzer";
   else if (isDisplay) actionType = "display";
   else actionType = "unknown";
 
