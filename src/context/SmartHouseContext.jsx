@@ -22,7 +22,6 @@ export function SmartHouseProvider({ children }) {
           try {
               await rawSend.getUsers();
               await rawSend.getRooms();
-              await rawSend.getDevices();
           } catch (err) {
               console.error("Failed to fetch initial data:", err);
           }
