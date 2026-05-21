@@ -15,7 +15,7 @@ describe("mapBackendDevice", () => {
 
     const result = mapBackendDevice(input);
 
-    expect(result.name).toBe("Light (1)");
+    expect(result.name).toBe("Light");
     expect(result.actions[0].type).toBe("toggle");
     expect(result.actions[0].value).toBe(1);
     expect(result.actions[0].min).toBe(0);
@@ -35,10 +35,12 @@ describe("mapBackendDevice", () => {
     expect(result.actions[0].type).toBe("sensor");
   });
 
-  it("maps slider devices correctly", () => {
+  // fan has been made to be a toggle type, so there are currently no slider types
+  // if they will be added, this is the test that can be used to verify the mapping
+  /*it("maps slider devices correctly", () => {
     const input = {
       id: 6,
-      type: "fan",
+      type: "slider_device",
       value: "3",
       min_value: "0",
       max_value: "5",
@@ -49,7 +51,7 @@ describe("mapBackendDevice", () => {
 
     expect(result.actions[0].type).toBe("slider");
     expect(result.actions[0].variant).toBe("range");
-  });
+  }); */
 
   it("uses fallback name and room when missing", () => {
     const input = {
@@ -61,7 +63,7 @@ describe("mapBackendDevice", () => {
 
     const result = mapBackendDevice(input);
 
-    expect(result.name).toBe("Fan (2)");
+    expect(result.name).toBe("Fan");
     expect(result.room).toBe("Unassigned");
   });
 

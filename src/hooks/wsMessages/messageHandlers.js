@@ -26,7 +26,7 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
         ? {
             ...d,
             actions: d.actions.map((a) => {
-              return {...a, value: Number(content)};
+              return { ...a, value: Number(content) };
             }),
           }
         : d,
@@ -41,22 +41,25 @@ function handleDeviceOnlineState(payload, { setDevices }) {
   );
 }
 
-function handleActionResponse(payload, { pendingRef, setWsError, actionResponseRef }) {
+function handleActionResponse(
+  payload,
+  { pendingRef, setWsError, actionResponseRef },
+) {
   const { statusCode, message } = payload;
-  
+
   // for when the "action response" is about a device error
   const devicePendings = Object.keys(pendingRef.current);
   if (devicePendings.length > 0) {
     devicePendings.forEach((deviceId) => {
       const p = pendingRef.current[deviceId];
       clearTimeout(p.timerId);
-      p.reject(new Error(msg));
+      p.reject(new Error(message));
       delete pendingRef.current[deviceId];
     });
-    setWsError(msg);
+    setWsError(message);
     return;
   }
-  
+
   // for all normal "action response" cases
   const next = actionResponseRef.current.shift();
   if (!next) return;
@@ -85,7 +88,7 @@ export const HANDLERS = {
   "inital devices": handleInitialDevices,
   "update value": handleUpdateValue,
   "action response": handleActionResponse,
-  "users": handleUsers,
-  "rooms": handleRooms,
+  users: handleUsers,
+  rooms: handleRooms,
   "update device onlineState": handleDeviceOnlineState,
 };
