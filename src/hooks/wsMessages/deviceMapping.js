@@ -10,6 +10,7 @@ const SENSOR_TYPES = [
 const BINARY_SENSOR_TYPES = ["button", "tilt", "motion"];
 const ALL_SENSOR_TYPES = [...SENSOR_TYPES, ...BINARY_SENSOR_TYPES];
 const SLIDER_TYPES = [];
+const DISPLAY_TYPES = ["display"];
 
 // Labels we use by device type
 const DEVICE_LABELS = {
@@ -28,29 +29,38 @@ const DEVICE_LABELS = {
   brightness: "Brightness",
   photo: "Photo",
   temperature: "Temperature",
-  display: "Text on Screen",
+  display: "Display Text",
 };
 
 // Map backend device format to our components
 export function mapBackendDevice(d) {
+  const isDisplay = DISPLAY_TYPES.includes(d.type);
+
+  // Display devices usea string
+  const currentValue = isDisplay
+    ? (d.value ?? null)
+    : d.value != null
+      ? Number(d.value)
+      : null;
+
   // max_value/min_value can arrive as strings from the backend
   const maxValue = d.max_value != null ? Number(d.max_value) : null;
   const minValue = d.min_value != null ? Number(d.min_value) : null;
-  const currentValue = d.value != null ? Number(d.value) : null;
 
   let actionType;
   if (TOGGLE_TYPES.includes(d.type)) actionType = "toggle";
   else if (ALL_SENSOR_TYPES.includes(d.type)) actionType = "sensor";
   else if (SLIDER_TYPES.includes(d.type)) actionType = "slider";
+  else if (isDisplay) actionType = "display";
   else actionType = "unknown";
 
   // Capitalize first letter for display of the type if name is missing
-  const displayType = d.type.charAt(0).toUpperCase() + d.type.slice(1);
+  const typeAsName = d.type.charAt(0).toUpperCase() + d.type.slice(1);
 
   // The device we return to use in the frontend
   return {
     id: d.id,
-    name: d.name ?? `${displayType}`,
+    name: d.name ?? `${typeAsName}`,
     type: d.type,
     isOnline: d.online,
     room: d.room ?? "Unassigned",

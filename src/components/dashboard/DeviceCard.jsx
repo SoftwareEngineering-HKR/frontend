@@ -2,7 +2,7 @@ import { deviceIcons } from "./deviceIcons";
 import ToggleControl from "./ActionControls/ToggleControl";
 import SliderControl from "./ActionControls/SliderControl";
 import SensorDisplay from "./ActionControls/SensorDisplay";
-import { useState, useEffect } from "react";
+import DisplayControl from "./ActionControls/DisplayControl";
 import { Wifi, WifiOff, Trash2, CircleQuestionMark } from "lucide-react";
 
 export default function DeviceCard({ device, onAction }) {
@@ -87,6 +87,16 @@ export default function DeviceCard({ device, onAction }) {
             if (action.type === "slider")
               return (
                 <SliderControl
+                  key={action.id}
+                  action={action}
+                  deviceId={device.id}
+                  isOnline={device.isOnline}
+                  onAction={onAction}
+                />
+              );
+            if (action.type === "display")
+              return (
+                <DisplayControl
                   key={action.id}
                   action={action}
                   deviceId={device.id}
