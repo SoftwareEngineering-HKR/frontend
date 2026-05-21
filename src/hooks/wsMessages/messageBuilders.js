@@ -14,6 +14,7 @@ function buildDeleteDevice({ id }) {
 function buildGetDevices() {
   return {
     type: "get all device info",
+    payload: {}
   };
 }
 
