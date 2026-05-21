@@ -71,7 +71,11 @@ export default function Overview() {
       </div>
 
       {toast && (
-        <Toast message={toast.message} onDismiss={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          onDismiss={() => setToast(null)}
+          isError={toast.isError}
+        />
       )}
     </>
   );
