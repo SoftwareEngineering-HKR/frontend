@@ -41,8 +41,31 @@ function handleDeviceOnlineState(payload, { setDevices }) {
   );
 }
 
+function handleAddedNewDevice(payload, { setDevices }) {
+  const { content } = payload;
+  const device = mapBackendDevice(content);
+
+  setDevices((prev) => {
+    const alreadyExists = prev.some((existingDevice) => existingDevice.id === device.id);
+
+    if (alreadyExists) {
+      return prev.map((existingDevice) =>
+        existingDevice.id === device.id ? device : existingDevice,
+      );
+    }
+
+    return [...prev, device];
+  });
+}
+
+function handleRemovedDeviceFromUser(payload, { setDevices }) {
+  const { deviceID } = payload;
+  setDevices((prev) => prev.filter((device) => device.id !== deviceID));
+}
+
 function handleActionResponse(payload, { pendingRef, setWsError, actionResponseRef }) {
   const { statusCode, message } = payload;
+  const msg = message || "Action failed";
   
   // for when the "action response" is about a device error
   const devicePendings = Object.keys(pendingRef.current);
@@ -80,8 +103,8 @@ function handleRooms(payload, { setRooms, actionResponseRef }) {
   next?.resolve(payload.rooms);
 }
 
-function handleDeviceInfo(payload, { setDevices, actionResponseRef }) {
-  setDevices(payload.devices.map(mapBackendDevice));
+function handleDeviceInfo(payload, { setAllDevices, actionResponseRef }) {
+  setAllDevices(payload.devices.map(mapBackendDevice));
   const next = actionResponseRef.current.shift();
   next?.resolve(payload.devices);
 }
@@ -94,4 +117,6 @@ export const HANDLERS = {
   "rooms": handleRooms,
   "device info": handleDeviceInfo,
   "update device onlineState": handleDeviceOnlineState,
+  "added new device": handleAddedNewDevice,
+  "removed device from user": handleRemovedDeviceFromUser,
 };
