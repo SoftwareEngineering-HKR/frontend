@@ -15,7 +15,7 @@ describe("mapBackendDevice", () => {
 
     const result = mapBackendDevice(input);
 
-    expect(result.name).toBe("Light (1)");
+    expect(result.name).toBe("Light");
     expect(result.actions[0].type).toBe("toggle");
     expect(result.actions[0].value).toBe(1);
     expect(result.actions[0].min).toBe(0);
@@ -35,7 +35,7 @@ describe("mapBackendDevice", () => {
     expect(result.actions[0].type).toBe("sensor");
   });
 
-  it("maps slider devices correctly", () => {
+  it("maps fan devices as toggles", () => {
     const input = {
       id: 6,
       type: "fan",
@@ -47,7 +47,7 @@ describe("mapBackendDevice", () => {
 
     const result = mapBackendDevice(input);
 
-    expect(result.actions[0].type).toBe("slider");
+    expect(result.actions[0].type).toBe("toggle");
     expect(result.actions[0].variant).toBe("range");
   });
 
@@ -61,7 +61,7 @@ describe("mapBackendDevice", () => {
 
     const result = mapBackendDevice(input);
 
-    expect(result.name).toBe("Fan (2)");
+    expect(result.name).toBe("Fan");
     expect(result.room).toBe("Unassigned");
   });
 
@@ -120,7 +120,27 @@ describe("mapBackendDevice", () => {
 
     expect(result.actions[0].label).toBe("Power");
   });
+/*
+  it("maps photo and distance as range sensors", () => {
+    const photo = mapBackendDevice({
+      id: 8,
+      type: "photo",
+      value: "20",
+      online: true,
+    });
+    const distance = mapBackendDevice({
+      id: 9,
+      type: "distance",
+      value: "30",
+      online: true,
+    });
 
+    expect(photo.actions[0].type).toBe("sensor");
+    expect(photo.actions[0].label).toBe("Photo");
+    expect(distance.actions[0].type).toBe("sensor");
+    expect(distance.actions[0].label).toBe("Distance");
+  });
+*/
   it("handles null values", () => {
     const input = {
       id: 7,

@@ -1,5 +1,5 @@
 const TOGGLE_TYPES = ["light", "buzz", "servo", "door", "window", "fan"];
-const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness", "temperature", "distance"];
+const SENSOR_TYPES = ["gas", "steam", "humidity", "brightness", "temperature", "photo", "distance"];
 const BINARY_SENSOR_TYPES = ["button", "tilt", "motion"];
 const ALL_SENSOR_TYPES = [...SENSOR_TYPES, ...BINARY_SENSOR_TYPES];
 const SLIDER_TYPES = [];
@@ -20,6 +20,8 @@ const DEVICE_LABELS = {
   tilt: "Tilt",
   brightness: "Brightness",
   temperature: "Temperature",
+  photo: "Photo",
+  distance: "Distance",
   display: "Text on Screen"
 };
 

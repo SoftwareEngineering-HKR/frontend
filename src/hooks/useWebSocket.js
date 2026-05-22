@@ -2,13 +2,15 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { HANDLERS } from "./wsMessages/messageHandlers";
 import { BUILDERS } from "./wsMessages/messageBuilders";
 
-// const WS_URL = "ws://192.168.50.207:8080";
-const WS_BASE_URL = "ws://localhost:8080";
+// const WS_URL =     "ws://192.168.50.207:8080";
+//const WS_BASE_URL = "ws://localhost:8080";
+const WS_BASE_URL = "ws://192.168.4.1:8080";
 
 // How long to wait for a device to confirm a state change before showing an error
 const UPDATE_TIMEOUT_MS = 5000;
 
 export function useWebSocket(isLoggedIn, accessToken) {
+  const [userDevices, setUserDevices] = useState([]);
   const [devices, setDevices] = useState([]);
   const [allDevices, setAllDevices] = useState([]);
   const [users, setUsers] = useState([]);
@@ -23,13 +25,14 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
   // context to pass to all handlers
   const handlerContext = {
+    setUserDevices,
     setDevices,
     setAllDevices,
     setUsers,
     setRooms,
     setWsError,
     pendingRef,
-    actionResponseRef
+    actionResponseRef,
   };
 
   // When user logs in with a valid token, it connects to WS; on logout, it disconnects
@@ -54,7 +57,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
     };
 
     ws.onmessage = (event) => {
-      console.log("WS RAW:", event.data);
+      //console.log("WS RAW:", event.data);
       let message;
       try {
         message = JSON.parse(event.data);
@@ -74,11 +77,17 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
     ws.onclose = () => {
       setConnectionStatus("disconnected");
-      wsRef.current = null;
+      // only clear if this is still the active socket
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
     };
 
     ws.onerror = () => {
       setConnectionStatus("disconnected");
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
       setWsError("Connection to server failed");
     };
 
@@ -101,7 +110,9 @@ export function useWebSocket(isLoggedIn, accessToken) {
       }, UPDATE_TIMEOUT_MS);
 
       pendingRef.current[deviceId] = { timerId, resolve, reject };
-      const messageToSend = JSON.stringify(BUILDERS["update value"]({ deviceId, value }));
+      const messageToSend = JSON.stringify(
+        BUILDERS["update value"]({ deviceId, value }),
+      );
       wsRef.current.send(messageToSend);
     });
   }
@@ -121,17 +132,15 @@ export function useWebSocket(isLoggedIn, accessToken) {
     });
   }
 
-
-  // To handle device removal in the UI after sending the delete command
   const removeDevice = useCallback((deviceId) => {
-    setDevices((prev) => prev.filter((d) => d.id !== deviceId));
-    setAllDevices((prev) => prev.filter((d) => d.id !== deviceId));
+    setDevices((prev) => prev.filter((device) => device.id !== deviceId));
+    setAllDevices((prev) => prev.filter((device) => device.id !== deviceId));
   }, []);
 
   const send = {
-    deviceValueUpdate: (deviceId, value) => sendDeviceValueUpdate(deviceId, value),
+    deviceValueUpdate: (deviceId, value) =>
+      sendDeviceValueUpdate(deviceId, value),
     getUsers: () => sendMessage("get users"),
-    getDevices: () => sendMessage("get all device info"),
     promote: (name) => sendMessage("update user role", { name, role: "admin" }),
     demote: (name) => sendMessage("update user role", { name, role: "user" }),
     deleteUser: (name) => sendMessage("delete user", { name }),
@@ -139,16 +148,22 @@ export function useWebSocket(isLoggedIn, accessToken) {
     createRoom: (room) => sendMessage("create room", { room }),
     deleteRoom: (id) => sendMessage("delete room", { id }),
     renameRoom: (id, name) => sendMessage("update room", { id, name }),
-    deleteDevice: (id) => {
-      sendMessage("delete device", { id });
-      removeDevice(id); // To update the UI, since backend doesn't send an update after deleting
+    // only removes from UI if server confirms success
+    removeFromDashboard: async (id) => {
+      await sendMessage("delete yourself from device", { deviceId: id });
+      removeDevice(id);
     },
+    deleteDevice: (id) => sendMessage("delete device", { id }),
+    getDevices: () => sendMessage("get all device info"),
+    updateDeviceRoom: (deviceId, roomId) => sendMessage("update device room", { deviceId, roomId }),
+    renameDevice: (id, name) => sendMessage("update device", { id, name }),
     assignUserToDevice: (userId, deviceId) => sendMessage("add user to device", { userId, deviceId }),
     unassignUserFromDevice: (userId, deviceId) => sendMessage("delete user from device", { userId, deviceId }),
   }
 
   return {
     send,
+    userDevices,
     devices,
     allDevices,
     users,
