@@ -9,6 +9,7 @@ const WS_BASE_URL = "ws://localhost:8080";
 const UPDATE_TIMEOUT_MS = 5000;
 
 export function useWebSocket(isLoggedIn, accessToken) {
+  const [userDevices, setUserDevices] = useState([]);
   const [devices, setDevices] = useState([]);
   const [users, setUsers] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -22,6 +23,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
   // context to pass to all handlers
   const handlerContext = {
+    setUserDevices,
     setDevices,
     setUsers,
     setRooms,
@@ -151,10 +153,12 @@ export function useWebSocket(isLoggedIn, accessToken) {
       await sendMessage("delete yourself from device", { deviceId: id });
       removeDevice(id);
     },
-  };
+    getDevices: () => sendMessage("get all device info"),
+  }
 
   return {
     send,
+    userDevices,
     devices,
     users,
     rooms,
