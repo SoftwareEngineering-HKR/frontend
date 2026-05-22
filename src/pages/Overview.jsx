@@ -10,13 +10,13 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Overview() {
   const { currentUser, logout } = useAuth();
-  const { devices, send, wsError } = useSmartHouse();
+  const { userDevices, send, wsError } = useSmartHouse();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const filteredDevices = devices.filter(
+  const filteredDevices = userDevices.filter(
     (device) =>
       device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.room.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -30,12 +30,20 @@ export default function Overview() {
     }
   };
 
+  const handleRemoveFromDashboard = async (deviceId) => {
+    try {
+      await send.removeFromDashboard(deviceId);
+    } catch (error) {
+      setToast({ message: error.message, isError: true });
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
         {/* Header */}
         <Header
-          devices={devices}
+          devices={userDevices}
           onLogout={logout}
           isAdmin={currentUser.isAdmin}
         />
@@ -65,13 +73,18 @@ export default function Overview() {
             <DeviceList
               filteredDevices={filteredDevices}
               onDeviceAction={handleDeviceAction}
+              onRemoveFromDashboard={handleRemoveFromDashboard}
             />
           )}
         </main>
       </div>
 
       {toast && (
-        <Toast message={toast.message} onDismiss={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          onDismiss={() => setToast(null)}
+          isError={toast.isError}
+        />
       )}
     </>
   );

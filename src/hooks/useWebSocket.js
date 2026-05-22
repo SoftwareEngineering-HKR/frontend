@@ -2,9 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { HANDLERS } from "./wsMessages/messageHandlers";
 import { BUILDERS } from "./wsMessages/messageBuilders";
 
-// const WS_URL =     "ws://192.168.50.207:8080";
-//const WS_BASE_URL = "ws://localhost:8080";
-const WS_BASE_URL = "ws://192.168.4.1:8080";
+// const WS_URL = "ws://192.168.50.207:8080";
+const WS_BASE_URL = "ws://localhost:8080";
 
 // How long to wait for a device to confirm a state change before showing an error
 const UPDATE_TIMEOUT_MS = 5000;

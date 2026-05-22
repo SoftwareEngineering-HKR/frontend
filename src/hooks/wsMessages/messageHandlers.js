@@ -2,16 +2,22 @@
 
 import { mapBackendDevice } from "./deviceMapping";
 
-// Backend sends this once on connect — the full device list for this user (i think its harcoded on their side for now)
-function handleInitialDevices(payload, { setDevices }) {
-  setDevices(payload.devices.map(mapBackendDevice));
+const getUserDeviceSetter = ({ setUserDevices, setDevices }) =>
+  setUserDevices ?? setDevices;
+
+// Backend sends this once on connect — the full device list for this user
+function handleInitialDevices(payload, context) {
+  const setCurrentDevices = getUserDeviceSetter(context);
+
+  setCurrentDevices(payload.devices.map(mapBackendDevice));
 }
 
 // Backend sends this when a device actually changes state
-function handleUpdateValue(payload, { setDevices, pendingRef }) {
+function handleUpdateValue(payload, context) {
+  const { pendingRef } = context;
+  const setCurrentDevices = getUserDeviceSetter(context);
   const { deviceID, content } = payload;
 
-  // Resolve the pending promise for this device, if it exists
   const pending = pendingRef.current[deviceID];
   if (pending) {
     clearTimeout(pending.timerId);
@@ -19,33 +25,41 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
     delete pendingRef.current[deviceID];
   }
 
-  // Update that device in state
-  setDevices((prev) =>
+  setCurrentDevices((prev) =>
     prev.map((d) =>
       d.id === deviceID
         ? {
             ...d,
-            actions: d.actions.map((a) => {
-              return {...a, value: Number(content)};
-            }),
+            actions: d.actions.map((a) => ({
+              ...a,
+              value: a.type === "display" ? content : Number(content),
+            })),
           }
         : d,
     ),
   );
 }
 
-function handleDeviceOnlineState(payload, { setDevices }) {
+function handleDeviceOnlineState(payload, context) {
+  const { setAllDevices } = context;
+  const setCurrentDevices = getUserDeviceSetter(context);
   const { deviceID, content } = payload;
-  setDevices((prev) =>
+
+  setCurrentDevices((prev) =>
+    prev.map((d) => (d.id === deviceID ? { ...d, isOnline: content } : d)),
+  );
+
+  setAllDevices?.((prev) =>
     prev.map((d) => (d.id === deviceID ? { ...d, isOnline: content } : d)),
   );
 }
 
-function handleAddedNewDevice(payload, { setDevices }) {
+function handleAddedNewDevice(payload, context) {
+  const setCurrentDevices = getUserDeviceSetter(context);
   const { content } = payload;
   const device = mapBackendDevice(content);
 
-  setDevices((prev) => {
+  setCurrentDevices((prev) => {
     const alreadyExists = prev.some((existingDevice) => existingDevice.id === device.id);
 
     if (alreadyExists) {
@@ -58,16 +72,19 @@ function handleAddedNewDevice(payload, { setDevices }) {
   });
 }
 
-function handleRemovedDeviceFromUser(payload, { setDevices }) {
+function handleRemovedDeviceFromUser(payload, context) {
+  const setCurrentDevices = getUserDeviceSetter(context);
   const { deviceID } = payload;
-  setDevices((prev) => prev.filter((device) => device.id !== deviceID));
+  setCurrentDevices((prev) => prev.filter((device) => device.id !== deviceID));
 }
 
-function handleActionResponse(payload, { pendingRef, setWsError, actionResponseRef }) {
+function handleActionResponse(
+  payload,
+  { pendingRef, setWsError, actionResponseRef },
+) {
   const { statusCode, message } = payload;
   const msg = message || "Action failed";
-  
-  // for when the "action response" is about a device error
+
   const devicePendings = Object.keys(pendingRef.current);
   if (devicePendings.length > 0) {
     devicePendings.forEach((deviceId) => {
@@ -79,15 +96,14 @@ function handleActionResponse(payload, { pendingRef, setWsError, actionResponseR
     setWsError(msg);
     return;
   }
-  
-  // for all normal "action response" cases
+
   const next = actionResponseRef.current.shift();
   if (!next) return;
 
   if (statusCode === 200) {
     next.resolve({ statusCode, message });
   } else {
-    next.reject(new Error(message));
+    next.reject(new Error(msg));
   }
 }
 
@@ -108,13 +124,13 @@ function handleDeviceInfo(payload, { setAllDevices, actionResponseRef }) {
   const next = actionResponseRef.current.shift();
   next?.resolve(payload.devices);
 }
-// To map incoming message type strings to handler functions
+
 export const HANDLERS = {
   "inital devices": handleInitialDevices,
   "update value": handleUpdateValue,
   "action response": handleActionResponse,
-  "users": handleUsers,
-  "rooms": handleRooms,
+  users: handleUsers,
+  rooms: handleRooms,
   "device info": handleDeviceInfo,
   "update device onlineState": handleDeviceOnlineState,
   "added new device": handleAddedNewDevice,

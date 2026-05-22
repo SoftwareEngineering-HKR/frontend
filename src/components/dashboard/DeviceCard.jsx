@@ -2,15 +2,24 @@ import { deviceIcons } from "./deviceIcons";
 import ToggleControl from "./ActionControls/ToggleControl";
 import SliderControl from "./ActionControls/SliderControl";
 import SensorDisplay from "./ActionControls/SensorDisplay";
-import { useState, useEffect } from "react";
-import { Wifi, WifiOff, Trash2, CircleQuestionMark } from "lucide-react";
+import DisplayControl from "./ActionControls/DisplayControl";
+import BuzzerControl from "./ActionControls/BuzzerControl";
+import ConfirmDialog from "../common/ConfirmDialog";
+import { Wifi, WifiOff, Trash2, CircleQuestionMark, X } from "lucide-react";
+import { useState } from "react";
 
-export default function DeviceCard({ device, onAction }) {
+export default function DeviceCard({
+  device,
+  onAction,
+  onRemoveFromDashboard,
+}) {
   const Icon = deviceIcons[device.type] ?? CircleQuestionMark;
+  const [showConfirm, setShowConfirm] = useState(false);
 
   return (
-    <div
-      className={`
+    <>
+      <div
+        className={`
         bg-white dark:bg-gray-800 rounded-xl shadow-lg border-2 transition-all duration-200 overflow-hidden
         ${
           device.isOnline
@@ -18,13 +27,13 @@ export default function DeviceCard({ device, onAction }) {
             : "border-gray-300 dark:border-gray-700 opacity-75"
         }
       `}
-    >
-      <div className="p-4 sm:p-5">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-3">
-            <div
-              className={`
+      >
+        <div className="p-4 sm:p-5">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start gap-3">
+              <div
+                className={`
                 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
                 ${
                   device.isOnline
@@ -32,72 +41,114 @@ export default function DeviceCard({ device, onAction }) {
                     : "bg-gray-100 dark:bg-gray-700 text-gray-400"
                 }
               `}
+              >
+                <Icon className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                  {device.name}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                  {device.room}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="p-1 text-gray-300 hover:text-red-500 dark:text-gray-600 dark:hover:text-red-400 rounded-lg transition-colors flex-shrink-0"
+              aria-label="Remove from dashboard"
             >
-              <Icon className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                {device.name}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                {device.room}
-              </p>
-            </div>
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Online / Offline */}
+          <div className="flex items-center gap-2 mb-4">
+            {device.isOnline ? (
+              <>
+                <Wifi className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                  Online
+                </span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-4 h-4 text-gray-400" />
+                <span className="text-sm font-medium text-gray-400">
+                  Offline
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Controls */}
+          <div className="space-y-2">
+            {device.actions.map((action) => {
+              if (action.type === "toggle")
+                return (
+                  <ToggleControl
+                    key={action.id}
+                    action={action}
+                    deviceId={device.id}
+                    isOnline={device.isOnline}
+                    onAction={onAction}
+                  />
+                );
+              if (action.type === "sensor")
+                return (
+                  <SensorDisplay
+                    key={action.id}
+                    action={action}
+                    deviceType={device.type}
+                  />
+                );
+              if (action.type === "slider")
+                return (
+                  <SliderControl
+                    key={action.id}
+                    action={action}
+                    deviceId={device.id}
+                    isOnline={device.isOnline}
+                    onAction={onAction}
+                  />
+                );
+              if (action.type === "display")
+                return (
+                  <DisplayControl
+                    key={action.id}
+                    action={action}
+                    deviceId={device.id}
+                    isOnline={device.isOnline}
+                    onAction={onAction}
+                  />
+                );
+              if (action.type === "buzzer")
+                return (
+                  <BuzzerControl
+                    key={action.id}
+                    action={action}
+                    deviceId={device.id}
+                    isOnline={device.isOnline}
+                    onAction={onAction}
+                  />
+                );
+              return null;
+            })}
           </div>
         </div>
-
-        {/* Online / Offline */}
-        <div className="flex items-center gap-2 mb-4">
-          {device.isOnline ? (
-            <>
-              <Wifi className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                Online
-              </span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-400">Offline</span>
-            </>
-          )}
-        </div>
-
-        {/* Controls */}
-        <div className="space-y-2">
-          {device.actions.map((action) => {
-            if (action.type === "toggle")
-              return (
-                <ToggleControl
-                  key={action.id}
-                  action={action}
-                  deviceId={device.id}
-                  isOnline={device.isOnline}
-                  onAction={onAction}
-                />
-              );
-            if (action.type === "sensor")
-              return (
-                <SensorDisplay
-                  key={action.id}
-                  action={action}
-                  deviceType={device.type}
-                />
-              );
-            if (action.type === "slider")
-              return (
-                <SliderControl
-                  key={action.id}
-                  action={action}
-                  deviceId={device.id}
-                  isOnline={device.isOnline}
-                  onAction={onAction}
-                />
-              );
-            return null;
-          })}
-        </div>
       </div>
-    </div>
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title="Remove Device"
+        message={`Are you sure you want to remove "${device.name}" from your dashboard?`}
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          setShowConfirm(false);
+          onRemoveFromDashboard(device.id);
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
+    </>
   );
 }

@@ -9,6 +9,7 @@ export default function DeviceList(props) {
             key={device.id}
             device={device}
             onAction={props.onDeviceAction}
+            onRemoveFromDashboard={props.onRemoveFromDashboard}
           />
         ))}
       </div>
