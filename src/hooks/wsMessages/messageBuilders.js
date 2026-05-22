@@ -19,6 +19,12 @@ function buildDeleteDeviceFromDashboard({ deviceId }) {
   };
 }
 
+function buildGetAllDeviceInfo() {
+  return {
+    type: "get all device info"
+  };
+}
+
 // user builders
 function buildGetUsers() {
   return {
@@ -93,4 +99,5 @@ export const BUILDERS = {
   "update room": buildRenameRoom,
   "delete device": buildDeleteDevice,
   "delete yourself from device": buildDeleteDeviceFromDashboard,
+  "get all device info": buildGetAllDeviceInfo,
 };
