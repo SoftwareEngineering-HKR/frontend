@@ -14,7 +14,16 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: "jsdom",
-    setupFiles: './tests/setup.js',
+    env: {
+      VITE_API_BASE: "http://localhost:8081",
+    },
+    environmentMatchGlobs: [
+      ["**/integration/**", "node"],
+      ["**tests/component/**", "jsdom"],
+    ],
+    testTimeout: 2_000,
+    setupFilesAfterEach: {
+      "jsdom": ['./tests/setup.js'],
+    },
   },
 });
