@@ -71,11 +71,17 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
     ws.onclose = () => {
       setConnectionStatus("disconnected");
-      wsRef.current = null;
+      // only clear if this is still the active socket
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
     };
 
     ws.onerror = () => {
       setConnectionStatus("disconnected");
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
       setWsError("Connection to server failed");
     };
 
