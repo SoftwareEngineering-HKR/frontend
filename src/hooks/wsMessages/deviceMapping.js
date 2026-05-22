@@ -46,6 +46,8 @@ export function mapBackendDevice(d) {
     type: d.type,
     isOnline: d.online,
     room: d.room ?? "Unassigned",
+    users: d.users ?? d.assignedUsers ?? [],
+    userIds: d.userIds ?? d.usersIds ?? [],
     actions: [
       {
         id: d.id,
