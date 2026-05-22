@@ -3,12 +3,12 @@
 import { mapBackendDevice } from "./deviceMapping";
 
 // Backend sends this once on connect — the full device list for this user (i think its harcoded on their side for now)
-function handleInitialDevices(payload, { setDevices }) {
-  setDevices(payload.devices.map(mapBackendDevice));
+function handleInitialDevices(payload, { setUserDevices }) {
+  setUserDevices(payload.devices.map(mapBackendDevice));
 }
 
 // Backend sends this when a device actually changes state
-function handleUpdateValue(payload, { setDevices, pendingRef }) {
+function handleUpdateValue(payload, { setUserDevices, pendingRef }) {
   const { deviceID, content } = payload;
 
   // Resolve the pending promise for this device, if it exists
@@ -20,7 +20,7 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
   }
 
   // Update that device in state
-  setDevices((prev) =>
+  setUserDevices((prev) =>
     prev.map((d) =>
       d.id === deviceID
         ? {
@@ -84,12 +84,19 @@ function handleRooms(payload, { setRooms, actionResponseRef }) {
   next?.resolve(payload.rooms);
 }
 
+function handleDevices(payload, { setDevices, actionResponseRef }) {
+  setDevices(payload.devices.map(mapBackendDevice));
+  const next = actionResponseRef.current.shift();
+  next?.resolve(payload.devices);
+}
+
 // To map incoming message type strings to handler functions
 export const HANDLERS = {
   "inital devices": handleInitialDevices,
   "update value": handleUpdateValue,
   "action response": handleActionResponse,
-  users: handleUsers,
-  rooms: handleRooms,
+  "users": handleUsers,
+  "rooms": handleRooms,
+  "device info": handleDevices,
   "update device onlineState": handleDeviceOnlineState,
 };

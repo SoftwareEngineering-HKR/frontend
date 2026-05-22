@@ -9,6 +9,7 @@ const WS_BASE_URL = "ws://localhost:8080";
 const UPDATE_TIMEOUT_MS = 5000;
 
 export function useWebSocket(isLoggedIn, accessToken) {
+  const [userDevices, setUserDevices] = useState([]);
   const [devices, setDevices] = useState([]);
   const [users, setUsers] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -22,6 +23,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
   // context to pass to all handlers
   const handlerContext = {
+    setUserDevices,
     setDevices,
     setUsers,
     setRooms,
@@ -51,7 +53,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
     };
 
     ws.onmessage = (event) => {
-      console.log("WS RAW:", event.data);
+      //console.log("WS RAW:", event.data);
       let message;
       try {
         message = JSON.parse(event.data);
@@ -126,11 +128,6 @@ export function useWebSocket(isLoggedIn, accessToken) {
     });
   }
 
-  // To handle device removal in the UI after sending the delete command
-  const removeDevice = useCallback((deviceId) => {
-    setDevices((prev) => prev.filter((d) => d.id !== deviceId));
-  }, []);
-
   const send = {
     deviceValueUpdate: (deviceId, value) =>
       sendDeviceValueUpdate(deviceId, value),
@@ -142,19 +139,20 @@ export function useWebSocket(isLoggedIn, accessToken) {
     createRoom: (room) => sendMessage("create room", { room }),
     deleteRoom: (id) => sendMessage("delete room", { id }),
     renameRoom: (id, name) => sendMessage("update room", { id, name }),
-    deleteDevice: (id) => {
-      sendMessage("delete device", { id });
-      removeDevice(id); // To update the UI, since backend doesn't send an update after deleting
-    },
     // only removes from UI if server confirms success
     removeFromDashboard: async (id) => {
       await sendMessage("delete yourself from device", { deviceId: id });
       removeDevice(id);
     },
-  };
+    deleteDevice: (id) => sendMessage("delete device", { id }),
+    getDevices: () => sendMessage("get all device info"),
+    updateDeviceRoom: (deviceId, roomId) => sendMessage("update device room", { deviceId, roomId }),
+    renameDevice: (id, name) => sendMessage("update device", { id, name }),
+  }
 
   return {
     send,
+    userDevices,
     devices,
     users,
     rooms,

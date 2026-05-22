@@ -77,5 +77,6 @@ export function mapBackendDevice(d) {
         max: maxValue,
       },
     ],
+    users: d.users,
   };
 }
