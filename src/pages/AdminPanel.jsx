@@ -7,20 +7,25 @@ import UserNameplate from "../components/admin/UserNameplate";
 import RoomPlate from "../components/admin/RoomPlate";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, LayoutDashboard, Plus, X } from "lucide-react";
+import { Settings, LayoutDashboard, Plus, X, ChevronDown } from "lucide-react";
 import Input from "../components/common/Input";
 import { useSmartHouse } from "../context/SmartHouseContext";
 import { useAuth } from "../context/AuthContext";
+import { Collapse } from "react-collapse";
+import DevicePlate from "../components/admin/DevicePlate";
 
 export default function AdminPanel() {
     const { currentUser, logout } = useAuth();
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    const { users, rooms, send } = useSmartHouse();
+    const { users, rooms, devices, send } = useSmartHouse();
     const [toast, setToast] = useState(null);
     const [isAddingRoom, setIsAddingRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState("");
     const navigate = useNavigate();
+    const [isUsersOpen, setIsUsersOpen] = useState(false);
+    const [isRoomsOpen, setIsRoomsOpen] = useState(false);
+    const [isDevicesOpen, setIsDevicesOpen] = useState(true);
 
     // confirm dialog handlers
     const openConfirm = ({ title, message, onConfirm }) => {
@@ -121,6 +126,46 @@ export default function AdminPanel() {
         }
     };
 
+    // device handlers
+    const handleUpdateDeviceRoom = async (device, room) => {
+        if (!room) return;
+
+        try {
+            await send.updateDeviceRoom(device.id, room.id);
+            setToast({ message: `${device.name} assigned to room ${room.name}.` });
+        } catch (err) {
+            setToast({ message: err.message, isError: true });
+        }
+    }
+
+    const handleRenameDevice = async (device, newName) => {
+        try {
+            await send.renameDevice(device.id, newName),
+            setToast({ message: `Device renamed to "${newName}".` });
+        } catch (err) {
+            setToast({ message: err.message, isError: true });
+        }
+    }
+
+    const handleRemoveDevice = async (id) => {
+        const device = devices.find((d) => d.id === id);
+        if (!device) return;
+
+        openConfirm({
+            title: "Remove Device",
+            message: `Are you sure you want to remove "${device.name}"?`,
+            onConfirm: async () => {
+                closeConfirm();
+                try {
+                    await send.deleteDevice(id);
+                    setToast({ message: `${device.name} successfuly removed.` });
+                } catch (error) {
+                    setToast({ message: err.message, isError: true });
+                }
+            },
+        });
+    }
+
     const admins = users?.filter((u) => u.type === "admin");
 
     return (
@@ -140,88 +185,131 @@ export default function AdminPanel() {
                     />
                 }
             />
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <main className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* user management section */}
                 <section>
-                    <h2 className="text-sm font-semibold m-4 text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                        User Management
-                    </h2>
-                    <div className="space-y-3">
-                        {users?.map((u) => (
-                            <UserNameplate
-                                key={u.id}
-                                user={u}
-                                currentUser={currentUser}
-                                onUpgrade={handleUpgrade}
-                                onDowngrade={handleDowngrade}
-                                onDelete={handleDeleteUser}
-                                onClick={() => setIsUserModalOpen(true)} 
-                            />
-                        ))}
+                    <div
+                        onClick={() => setIsUsersOpen(!isUsersOpen)}
+                        className="flex items-center justify-between gap-2 w-full text-left px-4 py-2 rounded-lg hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+                    >
+                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                            Users
+                        </h2>
+                        <ChevronDown className={`text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-transform duration-200`} />
                     </div>
+                    { isUsersOpen && (
+                        <div className="space-y-3 my-2">
+                            {users?.map((u) => (
+                                <UserNameplate
+                                    key={u.id}
+                                    user={u}
+                                    currentUser={currentUser}
+                                    onUpgrade={handleUpgrade}
+                                    onDowngrade={handleDowngrade}
+                                    onDelete={handleDeleteUser}
+                                    onClick={() => setIsUserModalOpen(true)} 
+                                />
+                            ))}
+                        </div>
+                    )}
                 </section>
                 {/* room management section */}
                 <section>
-                    <div className="flex items-center justify-between my-4">
-                        <h2 className="text-sm font-semibold m-4 text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                            Room Management
+                    <div
+                        onClick={() => setIsRoomsOpen(!isRoomsOpen)}
+                        className="flex items-center justify-between gap-2 w-full text-left px-4 py-2 rounded-lg hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+                    >
+                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                            Rooms
                         </h2>
-                        <Button
-                            text="Add Room"
-                            icon={<Plus className="w-5 h-5" />}
-                            variant="primary"
-                            onClick={() => {
-                                setIsAddingRoom(true);
-                                setNewRoomName("");
-                            }}
-                        />
+                        <ChevronDown className={`text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-transform duration-200`} />
                     </div>
-                    <div>
-                        <div className="space-y-3">
-                        {rooms.map((room) => (
-                            <RoomPlate
-                                key={room.id}
-                                room={room}
-                                onRename={handleRenameRoom}
-                                onDelete={handleDeleteRoom}
-                            />
-                        ))}
- 
-                        {rooms.length === 0 && !isAddingRoom && (
-                            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
-                                No rooms yet. Add one to get started.
-                            </p>
-                        )}
- 
-                        {/* Inline add form */}
-                        {isAddingRoom && (
-                            <div className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded-xl">
-                                <Input
-                                    autoFocus
-                                    type="text"
-                                    placeholder="Room name"
-                                    value={newRoomName}
-                                    onChange={(e) => setNewRoomName(e.target.value)}
-                                    className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                                />
+
+                    { isRoomsOpen && (
+                        <div className="mt-2">
+                            <div className="flex justify-end mb-2">  
                                 <Button
-                                    text="Add"
+                                    text="Add Room"
+                                    icon={<Plus className="w-5 h-5" />}
                                     variant="primary"
-                                    disabled={!newRoomName.trim()}
-                                    onClick={handleAddRoom}
-                                />
-                                <Button
-                                    variant="ghost"
-                                    icon={<X className="w-4 h-4" />}
                                     onClick={() => {
-                                        setIsAddingRoom(false);
+                                        setIsAddingRoom(true);
                                         setNewRoomName("");
                                     }}
                                 />
                             </div>
-                        )}
+                            <div className="space-y-3">
+                                {rooms.map((room) => (
+                                    <RoomPlate
+                                        key={room.id}
+                                        room={room}
+                                        onRename={handleRenameRoom}
+                                        onDelete={handleDeleteRoom}
+                                    />
+                                ))}
+        
+                                {rooms.length === 0 && !isAddingRoom && (
+                                    <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
+                                        No rooms yet. Add one to get started.
+                                    </p>
+                                )}
+        
+                                {/* Inline add form */}
+                                {isAddingRoom && (
+                                    <div className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded-xl">
+                                        <Input
+                                            autoFocus
+                                            type="text"
+                                            placeholder="Room name"
+                                            value={newRoomName}
+                                            onChange={(e) => setNewRoomName(e.target.value)}
+                                            className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                                        />
+                                        <Button
+                                            text="Add"
+                                            variant="primary"
+                                            disabled={!newRoomName.trim()}
+                                            onClick={handleAddRoom}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            icon={<X className="w-4 h-4" />}
+                                            onClick={() => {
+                                                setIsAddingRoom(false);
+                                                setNewRoomName("");
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </section>
+                <section>
+                    <div
+                        onClick={() => setIsDevicesOpen(!isDevicesOpen)}
+                        className="flex items-center justify-between gap-2 w-full text-left px-4 py-2 rounded-lg hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+                    >
+                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                            Devices
+                        </h2>
+                        <ChevronDown className={`text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-transform duration-200`} />
                     </div>
-                    </div>
+                    { isDevicesOpen && (
+                        <div className="space-y-3 my-2">
+                            {devices?.map((d) => (
+                                <DevicePlate
+                                    key={d.id}
+                                    device={d}
+                                    users={users}
+                                    rooms={rooms}
+                                    onChangeRoom={handleUpdateDeviceRoom}
+                                    onRename={handleRenameDevice}
+                                    onDelete={handleRemoveDevice}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </section>
             </main>
         </div>
