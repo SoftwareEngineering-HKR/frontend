@@ -9,7 +9,12 @@ function buildUpdateValue({ deviceId, value }) {
 }
 
 function buildDeleteDevice({ id }) {
-  return { type: "delete device", payload: { id } };
+  return {
+    type: "delete device",
+    payload: {
+      id
+    }
+  };
 }
 
 function buildDeleteDeviceFromDashboard({ deviceId }) {
@@ -25,6 +30,29 @@ function buildGetAllDeviceInfo() {
   };
 }
 
+function buildUpdateDeviceRoom({ deviceId, roomId }) {
+  return {
+    type: "update device room",
+    payload: 
+      {
+        deviceId,
+        roomId,
+      }
+  };
+}
+
+function buildRenameDevice({ id, name, description=null }) {
+  return {
+    type: "update device",
+    payload: 
+      {
+        id,
+        name,
+        description,
+      }
+  };
+}
+
 // user builders
 function buildGetUsers() {
   return {
@@ -35,11 +63,12 @@ function buildGetUsers() {
 function buildUpdateRole({ name, role }) {
   return {
     type: "update user role",
-    payload: {
-      userName: name,
-      role: role,
-    },
-  };
+    payload: 
+      {
+        userName: name,
+        role,
+      }
+  }
 }
 
 function buildDeleteUser({ name }) {
@@ -70,43 +99,22 @@ function buildCreateRoom({ room }) {
 function buildDeleteRoom({ id }) {
   return {
     type: "delete room",
-    payload: {
-      id: id,
-    },
-  };
+    payload: 
+      {
+        id
+      }
+  }
 }
 
 function buildRenameRoom({ id, name }) {
   return {
     type: "update room",
-    payload: {
-      id: id,
-      name: name,
-    },
-  };
-}
-
-function buildUpdateDeviceRoom({ deviceId, roomId }) {
-  return {
-    type: "update device room",
     payload: 
       {
-        deviceId: deviceId,
-        roomId: roomId,
+        id,
+        name,
       }
-  };
-}
-
-function buildRenameDevice({ id, name, description=null }) {
-  return {
-    type: "update device",
-    payload: 
-      {
-        id: id,
-        name: name,
-        description: description,
-      }
-  };
+  }
 }
 
 // BUILDER pairs
