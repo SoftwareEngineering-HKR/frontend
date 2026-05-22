@@ -11,7 +11,7 @@ import { Settings, LayoutDashboard, Plus, X, ChevronDown } from "lucide-react";
 import Input from "../components/common/Input";
 import { useSmartHouse } from "../context/SmartHouseContext";
 import { useAuth } from "../context/AuthContext";
-import { Collapse } from "react-collapse";
+// import { Collapse } from "react-collapse";
 import DevicePlate from "../components/admin/DevicePlate";
 
 export default function AdminPanel() {
