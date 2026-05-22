@@ -25,9 +25,10 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
       d.id === deviceID
         ? {
             ...d,
-            actions: d.actions.map((a) => {
-              return { ...a, value: Number(content) };
-            }),
+            actions: d.actions.map((a) => ({
+              ...a,
+              value: a.type === "display" ? content : Number(content),
+            })),
           }
         : d,
     ),

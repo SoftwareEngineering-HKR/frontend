@@ -23,7 +23,7 @@ function BinarySensorDisplay({ label, value, detectedText, clearText }) {
 }
 
 // Range sensor (for gas, steam, humidity, and so on)
-function RangeSensorDisplay({ label, value, min, max }) {
+function RangeSensorDisplay({ label, value, min, max, unit }) {
   const hasRange = min != null && max != null && max !== min;
   const percent = hasRange
     ? Math.round((((value ?? min) - min) / (max - min)) * 100)
@@ -37,7 +37,8 @@ function RangeSensorDisplay({ label, value, min, max }) {
         </span>
         <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
           {value ?? "—"}
-          {max != null && max > 1 && (
+          {unit && value != null ? unit : ""}
+          {!unit && max != null && max > 1 && (
             <span className="text-gray-400 font-normal"> / {max}</span>
           )}
         </span>
@@ -63,8 +64,14 @@ const BINARY_LABELS = {
 
 const BINARY_FALLBACK = { detected: "Active", clear: "Inactive" };
 
+const SENSOR_UNITS = {
+  temperature: "°C",
+  distance: "mm",
+};
+
 export default function SensorDisplay({ action, deviceType }) {
   const { label, value, min, max, variant } = action;
+  const unit = SENSOR_UNITS[deviceType];
 
   if (variant === "binary") {
     const { detected, clear } = BINARY_LABELS[deviceType] ?? BINARY_FALLBACK;
@@ -78,5 +85,13 @@ export default function SensorDisplay({ action, deviceType }) {
     );
   }
 
-  return <RangeSensorDisplay label={label} value={value} min={min} max={max} />;
+  return (
+    <RangeSensorDisplay
+      label={label}
+      value={value}
+      min={min}
+      max={max}
+      unit={unit}
+    />
+  );
 }

@@ -30,6 +30,14 @@ export default function Overview() {
     }
   };
 
+  const handleRemoveFromDashboard = async (deviceId) => {
+    try {
+      await send.removeFromDashboard(deviceId);
+    } catch (error) {
+      setToast({ message: error.message, isError: true });
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
@@ -65,13 +73,18 @@ export default function Overview() {
             <DeviceList
               filteredDevices={filteredDevices}
               onDeviceAction={handleDeviceAction}
+              onRemoveFromDashboard={handleRemoveFromDashboard}
             />
           )}
         </main>
       </div>
 
       {toast && (
-        <Toast message={toast.message} onDismiss={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          onDismiss={() => setToast(null)}
+          isError={toast.isError}
+        />
       )}
     </>
   );
