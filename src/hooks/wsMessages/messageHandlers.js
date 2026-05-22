@@ -8,7 +8,7 @@ function handleInitialDevices(payload, { setUserDevices }) {
 }
 
 // Backend sends this when a device actually changes state
-function handleUpdateValue(payload, { setDevices, pendingRef }) {
+function handleUpdateValue(payload, { setUserDevices, pendingRef }) {
   const { deviceID, content } = payload;
 
   // Resolve the pending promise for this device, if it exists
@@ -20,7 +20,7 @@ function handleUpdateValue(payload, { setDevices, pendingRef }) {
   }
 
   // Update that device in state
-  setDevices((prev) =>
+  setUserDevices((prev) =>
     prev.map((d) =>
       d.id === deviceID
         ? {
