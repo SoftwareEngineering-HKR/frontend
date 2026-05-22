@@ -17,7 +17,7 @@ export default function AdminPanel() {
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
-    const { users, rooms, devices, send } = useSmartHouse();
+    const { users, rooms, allDevices, send } = useSmartHouse();
     const [toast, setToast] = useState(null);
     const [isAddingRoom, setIsAddingRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState("");
@@ -81,38 +81,6 @@ export default function AdminPanel() {
             }
         });
     }
-
-    const handleAssignDevice = (user, device) => {
-        openConfirm({
-            title: "Assign Device",
-            message: `Assign "${device.name}" to ${user.username}?`,
-            onConfirm: async () => {
-                try {
-                    await send.assignUserToDevice(user.id, device.id);
-                    setToast({ message: `"${device.name}" assigned to ${user.username}.` });
-                } catch (err) {
-                    setToast({ message: err.message, isError: true });
-                }
-                closeConfirm();
-            }
-        });
-    };
-
-    const handleUnassignDevice = (user, device) => {
-        openConfirm({
-            title: "Unassign Device",
-            message: `Remove "${device.name}" from ${user.username}?`,
-            onConfirm: async () => {
-                try {
-                    await send.unassignUserFromDevice(user.id, device.id);
-                    setToast({ message: `"${device.name}" removed from ${user.username}.` });
-                } catch (err) {
-                    setToast({ message: err.message, isError: true });
-                }
-                closeConfirm();
-            }
-        });
-    };
 
     // room handlers
     const handleRenameRoom = async (roomId, newName) => {
@@ -268,10 +236,10 @@ export default function AdminPanel() {
             isOpen={isUserModalOpen}
             onClose={() => setIsUserModalOpen(false)}
             user={selectedUser}
-            devices={devices}
+            devices={allDevices}
             currentUser={currentUser}
-            onAssign={handleAssignDevice}
-            onUnassign={handleUnassignDevice}
+            send={send}
+            setToast={setToast}
             onUpgrade={handleUpgrade}
             onDowngrade={handleDowngrade}
             onDelete={handleDeleteUser}
