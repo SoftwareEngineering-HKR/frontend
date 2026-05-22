@@ -1,5 +1,6 @@
 // Each builder returns the message object to send over the socket.
 
+// device builders
 function buildUpdateValue({ deviceId, value }) {
   return {
     type: "update value",
@@ -9,6 +10,13 @@ function buildUpdateValue({ deviceId, value }) {
 
 function buildDeleteDevice({ id }) {
   return { type: "delete device", payload: { id } };
+}
+
+function buildDeleteDeviceFromDashboard({ deviceId }) {
+  return {
+    type: "delete yourself from device",
+    payload: { deviceId },
+  };
 }
 
 // user builders
@@ -21,22 +29,20 @@ function buildGetUsers() {
 function buildUpdateRole({ name, role }) {
   return {
     type: "update user role",
-    payload: 
-      {
-        userName: name,
-        role: role,
-      }
-  }
+    payload: {
+      userName: name,
+      role: role,
+    },
+  };
 }
 
 function buildDeleteUser({ name }) {
   return {
     type: "delete user",
-    payload: 
-      {
-        userName: name,
-      }
-  }
+    payload: {
+      userName: name,
+    },
+  };
 }
 
 // room builders
@@ -49,32 +55,29 @@ function buildGetRooms() {
 function buildCreateRoom({ room }) {
   return {
     type: "create room",
-    payload: 
-      {
-        name: room,
-      }
-  }
+    payload: {
+      name: room,
+    },
+  };
 }
 
 function buildDeleteRoom({ id }) {
   return {
     type: "delete room",
-    payload: 
-      {
-        id: id
-      }
-  }
+    payload: {
+      id: id,
+    },
+  };
 }
 
 function buildRenameRoom({ id, name }) {
   return {
     type: "update room",
-    payload: 
-      {
-        id: id,
-        name: name,
-      }
-  }
+    payload: {
+      id: id,
+      name: name,
+    },
+  };
 }
 
 // BUILDER pairs
@@ -89,4 +92,5 @@ export const BUILDERS = {
   "delete room": buildDeleteRoom,
   "update room": buildRenameRoom,
   "delete device": buildDeleteDevice,
+  "delete yourself from device": buildDeleteDeviceFromDashboard,
 };

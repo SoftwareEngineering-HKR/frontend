@@ -27,7 +27,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
     setRooms,
     setWsError,
     pendingRef,
-    actionResponseRef
+    actionResponseRef,
   };
 
   // When user logs in with a valid token, it connects to WS; on logout, it disconnects
@@ -98,7 +98,9 @@ export function useWebSocket(isLoggedIn, accessToken) {
       }, UPDATE_TIMEOUT_MS);
 
       pendingRef.current[deviceId] = { timerId, resolve, reject };
-      const messageToSend = JSON.stringify(BUILDERS["update value"]({ deviceId, value }));
+      const messageToSend = JSON.stringify(
+        BUILDERS["update value"]({ deviceId, value }),
+      );
       wsRef.current.send(messageToSend);
     });
   }
@@ -118,14 +120,14 @@ export function useWebSocket(isLoggedIn, accessToken) {
     });
   }
 
-
   // To handle device removal in the UI after sending the delete command
   const removeDevice = useCallback((deviceId) => {
     setDevices((prev) => prev.filter((d) => d.id !== deviceId));
   }, []);
 
   const send = {
-    deviceValueUpdate: (deviceId, value) => sendDeviceValueUpdate(deviceId, value),
+    deviceValueUpdate: (deviceId, value) =>
+      sendDeviceValueUpdate(deviceId, value),
     getUsers: () => sendMessage("get users"),
     promote: (name) => sendMessage("update user role", { name, role: "admin" }),
     demote: (name) => sendMessage("update user role", { name, role: "user" }),
@@ -138,7 +140,11 @@ export function useWebSocket(isLoggedIn, accessToken) {
       sendMessage("delete device", { id });
       removeDevice(id); // To update the UI, since backend doesn't send an update after deleting
     },
-  }
+    removeFromDashboard: async (id) => {
+      await sendMessage("delete yourself from device", { deviceId: id });
+      removeDevice(id);
+    },
+  };
 
   return {
     send,
