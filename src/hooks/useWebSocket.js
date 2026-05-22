@@ -146,6 +146,7 @@ export function useWebSocket(isLoggedIn, accessToken) {
       sendMessage("delete device", { id });
       removeDevice(id); // To update the UI, since backend doesn't send an update after deleting
     },
+    // only removes from UI if server confirms success
     removeFromDashboard: async (id) => {
       await sendMessage("delete yourself from device", { deviceId: id });
       removeDevice(id);
