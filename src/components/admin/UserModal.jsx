@@ -3,43 +3,146 @@ import Modal from "../common/Modal";
 import Button from "../common/Button";
 import { ChevronDown, ChevronUp, Plus, Minus, Trash2 } from "lucide-react";
 
+const isDeviceAssignedToUser = (device, user) => {
+  if (!device || !user) return false;
+
+  const userId = String(user.id);
+  const userName = user.username ?? user.name;
+  const userIds = device.userIds ?? device.usersIds ?? [];
+  const users = device.users ?? [];
+
+  return (
+    userIds.some((assignedUserId) => String(assignedUserId) === userId) ||
+    users.some((assignedUser) => {
+      const assignedUserId = assignedUser?.id ?? assignedUser?.userId;
+      const assignedUserName = assignedUser?.username ?? assignedUser?.userName ?? assignedUser?.name;
+
+      return (
+        (assignedUserId != null && String(assignedUserId) === userId) ||
+        (userName != null && assignedUserName === userName)
+      );
+    })
+  );
+};
+
+const getDeviceName = (device) => device.name || `${device.type} (${device.id})`;
+
+const sortByDeviceName = (first, second) =>
+  getDeviceName(first).localeCompare(getDeviceName(second));
+
+const getOtherAssignedUsers = (device, user) => {
+  const userId = String(user.id);
+  const userName = user.username ?? user.name;
+
+  return (device.users ?? [])
+    .filter((assignedUser) => {
+      const assignedUserId = assignedUser?.id ?? assignedUser?.userId;
+      const assignedUserName = assignedUser?.username ?? assignedUser?.userName ?? assignedUser?.name;
+
+      return (
+        (assignedUserId == null || String(assignedUserId) !== userId) &&
+        (userName == null || assignedUserName !== userName)
+      );
+    })
+    .map((assignedUser) => assignedUser.username ?? assignedUser.userName ?? assignedUser.name)
+    .filter(Boolean);
+};
+
 export default function UserModal({
   isOpen,
   onClose,
   user,
   devices = [],
-  onAssign,
-  onUnassign,
+  send,
+  setToast,
   onUpgrade,
   onDowngrade,
   onDelete,
   currentUser,
 }) {
-  const [expandedSections, setExpandedSections] = useState({
-    assigned: true,
-    available: true,
-  });
+  const [showDevices, setShowDevices] = useState(true);
 
   if (!user) return null;
 
-  // Inline device filtering logic
-  const assigned = devices.filter((device) => {
-    const users = device.users ?? [];
-    return users.some((u) => u.id === user.id);
-  });
-
-  const available = devices.filter((device) => {
-    const users = device.users ?? [];
-    return !users.some((u) => u.id === user.id);
-  });
+  const accessDevices = [...devices].sort(sortByDeviceName);
+  const assignedDevices = accessDevices.filter((device) =>
+    isDeviceAssignedToUser(device, user),
+  );
+  const availableDevices = accessDevices.filter(
+    (device) => !isDeviceAssignedToUser(device, user),
+  );
+  const assignedCount = assignedDevices.length;
 
   const isMe = user.id === currentUser?.id;
 
-  const toggleSection = (section) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+  const handleAssignDevice = async (user, device) => {
+    try {
+      await send.assignUserToDevice(user.id, device.id);
+      setToast({ message: `"${device.name}" assigned to ${user.username}.` });
+    } catch (err) {
+      setToast({ message: err.message, isError: true });
+    }
+  };
+
+  const handleUnassignDevice = async (user, device) => {
+    try {
+      await send.unassignUserFromDevice(user.id, device.id);
+      setToast({ message: `"${device.name}" removed from ${user.username}.` });
+    } catch (err) {
+      setToast({ message: err.message, isError: true });
+    }
+  };
+
+  const handleToggleDevice = (device) => {
+    if (isDeviceAssignedToUser(device, user)) {
+      handleUnassignDevice(user, device);
+      return;
+    }
+
+    handleAssignDevice(user, device);
+  };
+
+  const renderDeviceRow = (device, isAssigned) => {
+    const otherUsers = getOtherAssignedUsers(device, user);
+
+    return (
+      <div
+        key={device.id}
+        className={[
+          "flex items-center justify-between gap-3 p-3 rounded-lg border",
+          isAssigned
+            ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/30 dark:border-indigo-800"
+            : "bg-gray-50 border-gray-200 dark:bg-gray-700 dark:border-gray-600",
+        ].join(" ")}
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {getDeviceName(device)}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {device.type} - {device.room ?? "Unassigned"}
+          </p>
+          {otherUsers.length > 0 && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              Also assigned to {otherUsers.join(", ")}
+            </p>
+          )}
+        </div>
+        <Button
+          variant={isAssigned ? "danger" : "primary"}
+          icon={
+            isAssigned ? (
+              <Minus className="w-4 h-4" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )
+          }
+          onClick={() => handleToggleDevice(device)}
+          title={isAssigned ? "Remove device access" : "Assign device access"}
+          className="shrink-0"
+        />
+      </div>
+    );
   };
 
   return (
@@ -95,99 +198,60 @@ export default function UserModal({
           )}
         </div>
 
-        {/* Assigned Devices */}
+        {/* Device Assignment */}
         <div>
           <button
-            onClick={() => toggleSection("assigned")}
+            onClick={() => setShowDevices((previous) => !previous)}
             className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            {expandedSections.assigned ? (
+            {showDevices ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
             <span className="font-semibold text-sm text-gray-900 dark:text-white">
-              Assigned Devices ({assigned.length})
+              Device Access ({assignedCount}/{accessDevices.length})
             </span>
           </button>
 
-          {expandedSections.assigned && (
-            <div className="mt-2 space-y-2 ml-6">
-              {assigned.length === 0 ? (
+          {showDevices && (
+            <div className="mt-2 space-y-4 ml-6">
+              {accessDevices.length === 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No devices assigned
+                  No devices available
                 </p>
               ) : (
-                assigned.map((device) => (
-                  <div
-                    key={device.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {device.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {device.type}
-                      </p>
+                <>
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                      Assigned to {user.username} ({assignedDevices.length})
+                    </p>
+                    <div className="space-y-2">
+                      {assignedDevices.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          No devices assigned to this user
+                        </p>
+                      ) : (
+                        assignedDevices.map((device) => renderDeviceRow(device, true))
+                      )}
                     </div>
-                    <Button
-                      variant="danger"
-                      icon={<Minus className="w-4 h-4" />}
-                      onClick={() => onUnassign(user, device)}
-                      title="Remove device"
-                    />
                   </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
 
-        {/* Available Devices */}
-        <div>
-          <button
-            onClick={() => toggleSection("available")}
-            className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            {expandedSections.available ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-            <span className="font-semibold text-sm text-gray-900 dark:text-white">
-              Available Devices ({available.length})
-            </span>
-          </button>
-
-          {expandedSections.available && (
-            <div className="mt-2 space-y-2 ml-6">
-              {available.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  All devices assigned
-                </p>
-              ) : (
-                available.map((device) => (
-                  <div
-                    key={device.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {device.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {device.type}
-                      </p>
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                      Available to assign ({availableDevices.length})
+                    </p>
+                    <div className="space-y-2">
+                      {availableDevices.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          All devices are assigned to this user
+                        </p>
+                      ) : (
+                        availableDevices.map((device) => renderDeviceRow(device, false))
+                      )}
                     </div>
-                    <Button
-                      variant="primary"
-                      icon={<Plus className="w-4 h-4" />}
-                      onClick={() => onAssign(user, device)}
-                      title="Assign device"
-                    />
                   </div>
-                ))
+                </>
               )}
             </div>
           )}
