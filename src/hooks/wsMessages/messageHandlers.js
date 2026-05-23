@@ -48,18 +48,7 @@ function handleDeviceOnlineState(payload, { setUserDevices, setDevices }) {
 function handleAddedNewDevice(payload, { setUserDevices }) {
   const { content } = payload;
   const device = mapBackendDevice(content);
-
-  setUserDevices((prev) => {
-    const alreadyExists = prev.some((existingDevice) => existingDevice.id === device.id);
-
-    if (alreadyExists) {
-      return prev.map((existingDevice) =>
-        existingDevice.id === device.id ? device : existingDevice,
-      );
-    }
-
-    return [...prev, device];
-  });
+  setUserDevices(prev => [...prev, device]);
 }
 
 function handleRemovedDeviceFromUser(payload, { setUserDevices }) {
