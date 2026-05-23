@@ -53,6 +53,26 @@ function buildRenameDevice({ id, name, description=null }) {
   };
 }
 
+function buildAddUserToDevice({ userId, deviceId }) {
+  return {
+    type: "add user to device",
+    payload: {
+      userId,
+      deviceId,
+    }
+  }
+}
+
+function buildDeleteUserFromDevice({ userId, deviceId }) {
+  return {
+    type: "delete user from device",
+    payload: {
+      deviceId,
+      userId,
+    }
+  }
+}
+
 // user builders
 function buildGetUsers() {
   return {
@@ -109,7 +129,7 @@ function buildDeleteRoom({ id }) {
 function buildRenameRoom({ id, name }) {
   return {
     type: "update room",
-    payload: 
+    payload:
       {
         id,
         name,
@@ -129,6 +149,8 @@ export const BUILDERS = {
   "delete room": buildDeleteRoom,
   "update room": buildRenameRoom,
   "delete device": buildDeleteDevice,
+  "add user to device": buildAddUserToDevice,
+  "delete user from device": buildDeleteUserFromDevice,
   "delete yourself from device": buildDeleteDeviceFromDashboard,
   "get all device info": buildGetAllDeviceInfo,
   "update device room": buildUpdateDeviceRoom,
