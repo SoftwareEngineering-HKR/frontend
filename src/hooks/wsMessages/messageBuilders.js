@@ -53,6 +53,26 @@ function buildRenameDevice({ id, name, description=null }) {
   };
 }
 
+function buildAddUserToDevice({ userId, deviceId }) {
+  return {
+    type: "add user to device",
+    payload: {
+      userId,
+      deviceId,
+    }
+  }
+}
+
+function buildDeleteUserFromDevice({ userId, deviceId }) {
+  return {
+    type: "delete user from device",
+    payload: {
+      deviceId,
+      userId,
+    }
+  }
+}
+
 // user builders
 function buildGetUsers() {
   return {
@@ -114,26 +134,6 @@ function buildRenameRoom({ id, name }) {
         id,
         name,
       }
-  }
-}
-
-function buildAddUserToDevice({ userId, deviceId }) {
-  return {
-    type: "add user to device",
-    payload: {
-      userId,
-      deviceId,
-    }
-  }
-}
-
-function buildDeleteUserFromDevice({ userId, deviceId }) {
-  return {
-    type: "delete user from device",
-    payload: {
-      deviceId,
-      userId,
-    }
   }
 }
 
