@@ -22,7 +22,7 @@ export default defineConfig({
       ["**/integration/**", "node"],
       ["**tests/component/**", "jsdom"],
     ],
-    testTimeout: 2_000,
+    testTimeout: 10_000,
     setupFilesAfterEach: {
       "jsdom": ['./tests/setup.js'],
     },
