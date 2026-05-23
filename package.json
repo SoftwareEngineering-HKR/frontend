@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:integration": "vitest --reporter=verbose integration"
+    "test:integration": "vitest run --reporter=verbose integration"
   },
   "dependencies": {
     "jwt-decode": "^4.0.0",
