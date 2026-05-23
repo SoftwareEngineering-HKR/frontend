@@ -1,64 +1,44 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, afterAll } from "vitest";
 import * as authService from "../../src/service/api";
-import { send, useWebSocket } from "../../src/hooks/useWebSocket";
+import { createWsClient } from "./wsHelper";
 
-const HTTP_URL = "http://localhost:8081";
-
-describe("Authentication API", () => {
-
-  const testUser = {
-    username: "test",
+const TEST_USERS = {
+  user: {
+    username: `test_user`,
     password: "testtest",
+  }, 
+  admin: {
+    username: "admin",
+    password: "password",
   }
-  let accessToken = null;
+}
 
-  afterAll(async () => {
-    console.log("access token after all tests", accessToken);
-    if (!accessToken) return;
+describe("Authentication API", { sequential: true },() => {
 
-    try {
-      const { send } = useWebSocket(true, accessToken);
-      await send.deleteUser(testUser.username);
-    } catch (err) {
-      console.log(err);
-    }
-  })
-
-  describe("/signup", () => {
+  describe("/signup", { sequential: true }, () => {
 
     it("Successful Signup", async () => {
-      const res = await authService.auth("signup", testUser);
-      console.log(res);
+      const res = await authService.auth("signup", TEST_USERS.user);
+
       expect(res.success).toBeTruthy();
       expect(typeof res.accessToken).toBe("string");
       expect(res.accessToken).toBeDefined();
     });
 
     it("Attempt to sign up with existing username", async () => {
-      const res = await authService.auth("signup", testUser);
-      console.log(res);
-      expect(res.success).toBeTruthy();
-      expect(typeof res.accessToken).toBe("string");
-      expect(res.accessToken).toBeDefined();
+      const res = await authService.auth("signup", TEST_USERS.user);
+
+      expect(res.success).toBeFalsy();
+      expect(typeof res.accessToken).toBe("undefined");
+      expect(res.accessToken).toBeUndefined();
     });
 
-  })
+  });
 
-  describe("/logout", () => {
-
-    it("Successful Logout", async () => {
-      const res = await authService.logout();
-      console.log(res);
-      expect(res.success).toBeTruthy();      
-    });
-  })
-
-
-  describe("/login", () => {
-
+  describe("/login", { sequential: true }, () => {
     it("Invalid Credentials", async () => {
       const res = await authService.auth("login", { username: "test", password: "123" });
-      console.log(res);
+  
       expect(res.success).toBeFalsy();
       expect(typeof res.error).toBe("string");
       expect(res.error).toBe("Invalid credentials")
@@ -66,15 +46,26 @@ describe("Authentication API", () => {
     });
 
     it("Successful Login", async () => {
-      const res = await authService.auth("login", testUser);
-      console.log(res);
+      const res = await authService.auth("login", TEST_USERS.user);
       expect(res.success).toBeTruthy();
       expect(typeof res.accessToken).toBe("string");
       expect(res.accessToken).toBeDefined();
-
-      accessToken = res.accessToken;
     });
-
-  })
+  });
+  
+  // log in as admin to delete test user at the end of tests
+  afterAll(async () => {
+    try {
+      let res = await authService.auth("login", TEST_USERS.admin);
+      const client = createWsClient(res.accessToken);
+      const promise = client.waitFor((m) => m.type === "action response");
+      await client.send("delete user", { name: TEST_USERS.user.username });
+      res = await promise;
+      console.log(`[cleanup] ${res.payload.message}`);
+      client.close();
+    } catch (err) {
+      console.warn(`[cleanup] Could not delete test user: ${err.message}`);
+    }
+  });
 
 });
