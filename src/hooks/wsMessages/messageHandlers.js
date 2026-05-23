@@ -2,20 +2,13 @@
 
 import { mapBackendDevice } from "./deviceMapping";
 
-const getUserDeviceSetter = ({ setUserDevices, setDevices }) =>
-  setUserDevices ?? setDevices;
-
 // Backend sends this once on connect — the full device list for this user
-function handleInitialDevices(payload, context) {
-  const setCurrentDevices = getUserDeviceSetter(context);
-
-  setCurrentDevices(payload.devices.map(mapBackendDevice));
+function handleInitialDevices(payload, { setUserDevices }) {
+  setUserDevices(payload.devices.map(mapBackendDevice));
 }
 
 // Backend sends this when a device actually changes state
-function handleUpdateValue(payload, context) {
-  const { pendingRef } = context;
-  const setCurrentDevices = getUserDeviceSetter(context);
+function handleUpdateValue(payload, { setUserDevices, pendingRef }) {
   const { deviceID, content } = payload;
 
   const pending = pendingRef.current[deviceID];
@@ -25,7 +18,7 @@ function handleUpdateValue(payload, context) {
     delete pendingRef.current[deviceID];
   }
 
-  setCurrentDevices((prev) =>
+  setUserDevices((prev) =>
     prev.map((d) =>
       d.id === deviceID
         ? {
@@ -40,26 +33,23 @@ function handleUpdateValue(payload, context) {
   );
 }
 
-function handleDeviceOnlineState(payload, context) {
-  const { setAllDevices } = context;
-  const setCurrentDevices = getUserDeviceSetter(context);
+function handleDeviceOnlineState(payload, { setUserDevices, setDevices }) {
   const { deviceID, content } = payload;
 
-  setCurrentDevices((prev) =>
+  setUserDevices((prev) =>
     prev.map((d) => (d.id === deviceID ? { ...d, isOnline: content } : d)),
   );
 
-  setAllDevices?.((prev) =>
+  setDevices((prev) =>
     prev.map((d) => (d.id === deviceID ? { ...d, isOnline: content } : d)),
   );
 }
 
-function handleAddedNewDevice(payload, context) {
-  const setCurrentDevices = getUserDeviceSetter(context);
+function handleAddedNewDevice(payload, { setUserDevices }) {
   const { content } = payload;
   const device = mapBackendDevice(content);
 
-  setCurrentDevices((prev) => {
+  setUserDevices((prev) => {
     const alreadyExists = prev.some((existingDevice) => existingDevice.id === device.id);
 
     if (alreadyExists) {
@@ -72,10 +62,9 @@ function handleAddedNewDevice(payload, context) {
   });
 }
 
-function handleRemovedDeviceFromUser(payload, context) {
-  const setCurrentDevices = getUserDeviceSetter(context);
+function handleRemovedDeviceFromUser(payload, { setUserDevices }) {
   const { deviceID } = payload;
-  setCurrentDevices((prev) => prev.filter((device) => device.id !== deviceID));
+  setUserDevices((prev) => prev.filter((device) => device.id !== deviceID));
 }
 
 function handleActionResponse(
@@ -119,8 +108,8 @@ function handleRooms(payload, { setRooms, actionResponseRef }) {
   next?.resolve(payload.rooms);
 }
 
-function handleDeviceInfo(payload, { setAllDevices, actionResponseRef }) {
-  setAllDevices(payload.devices.map(mapBackendDevice));
+function handleDeviceInfo(payload, { setDevices, actionResponseRef }) {
+  setDevices(payload.devices.map(mapBackendDevice));
   const next = actionResponseRef.current.shift();
   next?.resolve(payload.devices);
 }

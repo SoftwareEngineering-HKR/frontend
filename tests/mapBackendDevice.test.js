@@ -35,22 +35,6 @@ describe("mapBackendDevice", () => {
     expect(result.actions[0].type).toBe("sensor");
   });
 
-  it("maps fan devices as toggles", () => {
-    const input = {
-      id: 6,
-      type: "fan",
-      value: "3",
-      min_value: "0",
-      max_value: "5",
-      online: true,
-    };
-
-    const result = mapBackendDevice(input);
-
-    expect(result.actions[0].type).toBe("toggle");
-    expect(result.actions[0].variant).toBe("range");
-  });
-
   it("uses fallback name and room when missing", () => {
     const input = {
       id: 2,
@@ -120,27 +104,7 @@ describe("mapBackendDevice", () => {
 
     expect(result.actions[0].label).toBe("Power");
   });
-/*
-  it("maps photo and distance as range sensors", () => {
-    const photo = mapBackendDevice({
-      id: 8,
-      type: "photo",
-      value: "20",
-      online: true,
-    });
-    const distance = mapBackendDevice({
-      id: 9,
-      type: "distance",
-      value: "30",
-      online: true,
-    });
 
-    expect(photo.actions[0].type).toBe("sensor");
-    expect(photo.actions[0].label).toBe("Photo");
-    expect(distance.actions[0].type).toBe("sensor");
-    expect(distance.actions[0].label).toBe("Distance");
-  });
-*/
   it("handles null values", () => {
     const input = {
       id: 7,

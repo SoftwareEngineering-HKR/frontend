@@ -5,23 +5,8 @@ import { ChevronDown, ChevronUp, Plus, Minus, Trash2 } from "lucide-react";
 
 const isDeviceAssignedToUser = (device, user) => {
   if (!device || !user) return false;
-
-  const userId = String(user.id);
-  const userName = user.username ?? user.name;
-  const userIds = device.userIds ?? device.usersIds ?? [];
-  const users = device.users ?? [];
-
-  return (
-    userIds.some((assignedUserId) => String(assignedUserId) === userId) ||
-    users.some((assignedUser) => {
-      const assignedUserId = assignedUser?.id ?? assignedUser?.userId;
-      const assignedUserName = assignedUser?.username ?? assignedUser?.userName ?? assignedUser?.name;
-
-      return (
-        (assignedUserId != null && String(assignedUserId) === userId) ||
-        (userName != null && assignedUserName === userName)
-      );
-    })
+  return (device.users ?? []).some(
+    (assignedUser) => assignedUser.id === user.id,
   );
 };
 

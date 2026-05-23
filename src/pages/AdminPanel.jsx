@@ -10,7 +10,6 @@ import { Settings, LayoutDashboard, Plus, X, ChevronDown } from "lucide-react";
 import Input from "../components/common/Input";
 import { useSmartHouse } from "../context/SmartHouseContext";
 import { useAuth } from "../context/AuthContext";
-// import { Collapse } fromç "react-collapse";
 import DevicePlate from "../components/admin/DevicePlate";
 import UserModal from "../components/admin/UserModal";
 export default function AdminPanel() {
@@ -18,7 +17,7 @@ export default function AdminPanel() {
     const { currentUser, logout } = useAuth();
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    const { users, rooms, allDevices, send } = useSmartHouse();
+    const { users, rooms, devices, send } = useSmartHouse();
     const [toast, setToast] = useState(null);
     const [isAddingRoom, setIsAddingRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState("");
@@ -148,7 +147,7 @@ export default function AdminPanel() {
     }
 
     const handleRemoveDevice = async (id) => {
-        const device = allDevices.find((d) => d.id === id);
+        const device = devices.find((d) => d.id === id);
         if (!device) return;
 
         openConfirm({
@@ -300,7 +299,7 @@ export default function AdminPanel() {
                     </div>
                     { isDevicesOpen && (
                         <div className="space-y-3 my-2">
-                            {allDevices?.map((d) => (
+                            {devices?.map((d) => (
                                 <DevicePlate
                                     key={d.id}
                                     device={d}
@@ -321,7 +320,7 @@ export default function AdminPanel() {
             isOpen={isUserModalOpen}
             onClose={() => setIsUserModalOpen(false)}
             user={selectedUser}
-            devices={allDevices}
+            devices={devices}
             currentUser={currentUser}
             send={send}
             setToast={setToast}

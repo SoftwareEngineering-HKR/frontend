@@ -10,7 +10,6 @@ export function SmartHouseProvider({ children }) {
     send,
     userDevices,
     devices,
-    allDevices,
     users,
     rooms,
     connectionStatus,
@@ -41,7 +40,6 @@ export function SmartHouseProvider({ children }) {
           rooms,
           userDevices,
           devices,
-          allDevices,
           send,
           connectionStatus,
           wsError

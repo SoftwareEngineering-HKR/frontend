@@ -53,13 +53,6 @@ function buildRenameDevice({ id, name, description=null }) {
   };
 }
 
-function buildGetDevices() {
-  return {
-    type: "get all device info",
-    payload: {}
-  };
-}
-
 // user builders
 function buildGetUsers() {
   return {

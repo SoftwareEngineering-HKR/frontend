@@ -11,7 +11,6 @@ const UPDATE_TIMEOUT_MS = 5000;
 export function useWebSocket(isLoggedIn, accessToken) {
   const [userDevices, setUserDevices] = useState([]);
   const [devices, setDevices] = useState([]);
-  const [allDevices, setAllDevices] = useState([]);
   const [users, setUsers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState("disconnected"); // "disconnected" | "connecting" | "connected"
@@ -26,7 +25,6 @@ export function useWebSocket(isLoggedIn, accessToken) {
   const handlerContext = {
     setUserDevices,
     setDevices,
-    setAllDevices,
     setUsers,
     setRooms,
     setWsError,
@@ -40,7 +38,6 @@ export function useWebSocket(isLoggedIn, accessToken) {
       wsRef.current?.close();
       wsRef.current = null;
       setDevices([]);
-      setAllDevices([]);
       setConnectionStatus("disconnected");
       return;
     }
@@ -133,7 +130,6 @@ export function useWebSocket(isLoggedIn, accessToken) {
 
   const removeDevice = useCallback((deviceId) => {
     setDevices((prev) => prev.filter((device) => device.id !== deviceId));
-    setAllDevices((prev) => prev.filter((device) => device.id !== deviceId));
   }, []);
 
   const send = {
@@ -156,15 +152,22 @@ export function useWebSocket(isLoggedIn, accessToken) {
     getDevices: () => sendMessage("get all device info"),
     updateDeviceRoom: (deviceId, roomId) => sendMessage("update device room", { deviceId, roomId }),
     renameDevice: (id, name) => sendMessage("update device", { id, name }),
-    assignUserToDevice: (userId, deviceId) => sendMessage("add user to device", { userId, deviceId }),
-    unassignUserFromDevice: (userId, deviceId) => sendMessage("delete user from device", { userId, deviceId }),
+    assignUserToDevice: async (userId, deviceId) => {
+      const response = await sendMessage("add user to device", { userId, deviceId });
+      await sendMessage("get all device info");
+      return response;
+    },
+    unassignUserFromDevice: async (userId, deviceId) => {
+      const response = await sendMessage("delete user from device", { userId, deviceId });
+      await sendMessage("get all device info");
+      return response;
+    },
   }
 
   return {
     send,
     userDevices,
     devices,
-    allDevices,
     users,
     rooms,
     connectionStatus,

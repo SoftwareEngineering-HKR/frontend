@@ -66,8 +66,7 @@ export function mapBackendDevice(d) {
     type: d.type,
     isOnline: d.online,
     room: d.room ?? "Unassigned",
-    users: d.users ?? d.assignedUsers ?? [],
-    userIds: d.userIds ?? d.usersIds ?? [],
+    users: d.users ?? [],
     actions: [
       {
         id: d.id,
@@ -79,6 +78,5 @@ export function mapBackendDevice(d) {
         max: maxValue,
       },
     ],
-    users: d.users,
   };
 }
