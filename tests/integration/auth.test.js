@@ -32,10 +32,27 @@ describe("Authentication API", () => {
       expect(res.success).toBeTruthy();
       expect(typeof res.accessToken).toBe("string");
       expect(res.accessToken).toBeDefined();
+    });
 
-      
+    it("Attempt to sign up with existing username", async () => {
+      const res = await authService.auth("signup", testUser);
+      console.log(res);
+      expect(res.success).toBeTruthy();
+      expect(typeof res.accessToken).toBe("string");
+      expect(res.accessToken).toBeDefined();
+    });
+
+  })
+
+  describe("/logout", () => {
+
+    it("Successful Logout", async () => {
+      const res = await authService.logout();
+      console.log(res);
+      expect(res.success).toBeTruthy();      
     });
   })
+
 
   describe("/login", () => {
 
