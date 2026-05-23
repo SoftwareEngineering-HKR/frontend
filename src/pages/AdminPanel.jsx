@@ -1,7 +1,6 @@
 import Header from "../components/dashboard/Header";
 import Button from "../components/common/Button";
 import Toast from "../components/common/Toast";
-import Modal from "../components/common/Modal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import UserNameplate from "../components/admin/UserNameplate";
 import RoomPlate from "../components/admin/RoomPlate";
@@ -11,10 +10,10 @@ import { Settings, LayoutDashboard, Plus, X, ChevronDown } from "lucide-react";
 import Input from "../components/common/Input";
 import { useSmartHouse } from "../context/SmartHouseContext";
 import { useAuth } from "../context/AuthContext";
-import { Collapse } from "react-collapse";
 import DevicePlate from "../components/admin/DevicePlate";
-
+import UserModal from "../components/admin/UserModal";
 export default function AdminPanel() {
+    const [selectedUser, setSelectedUser] = useState(null);
     const { currentUser, logout } = useAuth();
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -48,7 +47,7 @@ export default function AdminPanel() {
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
                 }
-                closeConfirm();   
+                closeConfirm();
             }
         });
     }
@@ -63,8 +62,8 @@ export default function AdminPanel() {
                     setToast({ message: `${user.username} successfully promoted to Admin.` });
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
-                }   
-                closeConfirm();   
+                }
+                closeConfirm();
             }
         });
     }
@@ -79,8 +78,8 @@ export default function AdminPanel() {
                     setToast({ message: `${user.username} successfully deleted from users.` });
                 } catch (err) {
                     setToast({ message: err.message, isError: true });
-                }   
-                closeConfirm();   
+                }
+                closeConfirm();
             }
         });
     }
@@ -159,7 +158,7 @@ export default function AdminPanel() {
                 try {
                     await send.deleteDevice(id);
                     setToast({ message: `${device.name} successfuly removed.` });
-                } catch (error) {
+                } catch (err) {
                     setToast({ message: err.message, isError: true });
                 }
             },
@@ -207,7 +206,10 @@ export default function AdminPanel() {
                                     onUpgrade={handleUpgrade}
                                     onDowngrade={handleDowngrade}
                                     onDelete={handleDeleteUser}
-                                    onClick={() => setIsUserModalOpen(true)} 
+                                    onClick={() => {
+                                        setSelectedUser(u);
+                                        setIsUserModalOpen(true);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -227,7 +229,7 @@ export default function AdminPanel() {
 
                     { isRoomsOpen && (
                         <div className="mt-2">
-                            <div className="flex justify-end mb-2">  
+                            <div className="flex justify-end mb-2">
                                 <Button
                                     text="Add Room"
                                     icon={<Plus className="w-5 h-5" />}
@@ -247,13 +249,13 @@ export default function AdminPanel() {
                                         onDelete={handleDeleteRoom}
                                     />
                                 ))}
-        
+
                                 {rooms.length === 0 && !isAddingRoom && (
                                     <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
                                         No rooms yet. Add one to get started.
                                     </p>
                                 )}
-        
+
                                 {/* Inline add form */}
                                 {isAddingRoom && (
                                     <div className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded-xl">
@@ -314,14 +316,18 @@ export default function AdminPanel() {
             </main>
         </div>
 
-        {/* This Modal should be replaced with the UserModal */ }
-        <Modal
+        <UserModal
             isOpen={isUserModalOpen}
             onClose={() => setIsUserModalOpen(false)}
-            title={"User Modal placeholder"}
-        >
-            <span className="text-gray-700 dark:text-gray-300">Some modal content</span>
-        </Modal>
+            user={selectedUser}
+            devices={devices}
+            currentUser={currentUser}
+            send={send}
+            setToast={setToast}
+            onUpgrade={handleUpgrade}
+            onDowngrade={handleDowngrade}
+            onDelete={handleDeleteUser}
+        />
     
         {toast && (
             <Toast

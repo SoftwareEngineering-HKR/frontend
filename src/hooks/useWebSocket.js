@@ -128,6 +128,10 @@ export function useWebSocket(isLoggedIn, accessToken) {
     });
   }
 
+  const removeDevice = useCallback((deviceId) => {
+    setDevices((prev) => prev.filter((device) => device.id !== deviceId));
+  }, []);
+
   const send = {
     deviceValueUpdate: (deviceId, value) =>
       sendDeviceValueUpdate(deviceId, value),
@@ -148,6 +152,16 @@ export function useWebSocket(isLoggedIn, accessToken) {
     getDevices: () => sendMessage("get all device info"),
     updateDeviceRoom: (deviceId, roomId) => sendMessage("update device room", { deviceId, roomId }),
     renameDevice: (id, name) => sendMessage("update device", { id, name }),
+    assignUserToDevice: async (userId, deviceId) => {
+      const response = await sendMessage("add user to device", { userId, deviceId });
+      await sendMessage("get all device info");
+      return response;
+    },
+    unassignUserFromDevice: async (userId, deviceId) => {
+      const response = await sendMessage("delete user from device", { userId, deviceId });
+      await sendMessage("get all device info");
+      return response;
+    },
   }
 
   return {

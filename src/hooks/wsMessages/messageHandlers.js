@@ -2,7 +2,7 @@
 
 import { mapBackendDevice } from "./deviceMapping";
 
-// Backend sends this once on connect — the full device list for this user (i think its harcoded on their side for now)
+// Backend sends this once on connect — the full device list for this user
 function handleInitialDevices(payload, { setUserDevices }) {
   setUserDevices(payload.devices.map(mapBackendDevice));
 }
@@ -11,7 +11,6 @@ function handleInitialDevices(payload, { setUserDevices }) {
 function handleUpdateValue(payload, { setUserDevices, pendingRef }) {
   const { deviceID, content } = payload;
 
-  // Resolve the pending promise for this device, if it exists
   const pending = pendingRef.current[deviceID];
   if (pending) {
     clearTimeout(pending.timerId);
@@ -19,7 +18,6 @@ function handleUpdateValue(payload, { setUserDevices, pendingRef }) {
     delete pendingRef.current[deviceID];
   }
 
-  // Update that device in state
   setUserDevices((prev) =>
     prev.map((d) =>
       d.id === deviceID
@@ -35,11 +33,38 @@ function handleUpdateValue(payload, { setUserDevices, pendingRef }) {
   );
 }
 
-function handleDeviceOnlineState(payload, { setDevices }) {
+function handleDeviceOnlineState(payload, { setUserDevices, setDevices }) {
   const { deviceID, content } = payload;
+
+  setUserDevices((prev) =>
+    prev.map((d) => (d.id === deviceID ? { ...d, isOnline: content } : d)),
+  );
+
   setDevices((prev) =>
     prev.map((d) => (d.id === deviceID ? { ...d, isOnline: content } : d)),
   );
+}
+
+function handleAddedNewDevice(payload, { setUserDevices }) {
+  const { content } = payload;
+  const device = mapBackendDevice(content);
+
+  setUserDevices((prev) => {
+    const alreadyExists = prev.some((existingDevice) => existingDevice.id === device.id);
+
+    if (alreadyExists) {
+      return prev.map((existingDevice) =>
+        existingDevice.id === device.id ? device : existingDevice,
+      );
+    }
+
+    return [...prev, device];
+  });
+}
+
+function handleRemovedDeviceFromUser(payload, { setUserDevices }) {
+  const { deviceID } = payload;
+  setUserDevices((prev) => prev.filter((device) => device.id !== deviceID));
 }
 
 function handleActionResponse(
@@ -47,28 +72,27 @@ function handleActionResponse(
   { pendingRef, setWsError, actionResponseRef },
 ) {
   const { statusCode, message } = payload;
+  const msg = message || "Action failed";
 
-  // for when the "action response" is about a device error
   const devicePendings = Object.keys(pendingRef.current);
   if (devicePendings.length > 0) {
     devicePendings.forEach((deviceId) => {
       const p = pendingRef.current[deviceId];
       clearTimeout(p.timerId);
-      p.reject(new Error(message));
+      p.reject(new Error(msg));
       delete pendingRef.current[deviceId];
     });
-    setWsError(message);
+    setWsError(msg);
     return;
   }
 
-  // for all normal "action response" cases
   const next = actionResponseRef.current.shift();
   if (!next) return;
 
   if (statusCode === 200) {
     next.resolve({ statusCode, message });
   } else {
-    next.reject(new Error(message));
+    next.reject(new Error(msg));
   }
 }
 
@@ -84,19 +108,20 @@ function handleRooms(payload, { setRooms, actionResponseRef }) {
   next?.resolve(payload.rooms);
 }
 
-function handleDevices(payload, { setDevices, actionResponseRef }) {
+function handleDeviceInfo(payload, { setDevices, actionResponseRef }) {
   setDevices(payload.devices.map(mapBackendDevice));
   const next = actionResponseRef.current.shift();
   next?.resolve(payload.devices);
 }
 
-// To map incoming message type strings to handler functions
 export const HANDLERS = {
   "inital devices": handleInitialDevices,
   "update value": handleUpdateValue,
   "action response": handleActionResponse,
-  "users": handleUsers,
-  "rooms": handleRooms,
-  "device info": handleDevices,
+  users: handleUsers,
+  rooms: handleRooms,
+  "device info": handleDeviceInfo,
   "update device onlineState": handleDeviceOnlineState,
+  "added new device": handleAddedNewDevice,
+  "removed device from user": handleRemovedDeviceFromUser,
 };

@@ -35,24 +35,6 @@ describe("mapBackendDevice", () => {
     expect(result.actions[0].type).toBe("sensor");
   });
 
-  // fan has been made to be a toggle type, so there are currently no slider types
-  // if they will be added, this is the test that can be used to verify the mapping
-  /*it("maps slider devices correctly", () => {
-    const input = {
-      id: 6,
-      type: "slider_device",
-      value: "3",
-      min_value: "0",
-      max_value: "5",
-      online: true,
-    };
-
-    const result = mapBackendDevice(input);
-
-    expect(result.actions[0].type).toBe("slider");
-    expect(result.actions[0].variant).toBe("range");
-  }); */
-
   it("uses fallback name and room when missing", () => {
     const input = {
       id: 2,
