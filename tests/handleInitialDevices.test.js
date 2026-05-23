@@ -4,8 +4,8 @@ import { HANDLERS } from "../src/hooks/wsMessages/messageHandlers";
 const handlerInitialDevices = HANDLERS["inital devices"];
 
 describe("handleInitialDevices", () => {
-  it("calls setDevices with the correct mapped devices from the payload", () => {
-    const setDevices = vi.fn();
+  it("calls setUserDevices with the correct mapped devices from the payload", () => {
+    const setUserDevices = vi.fn();
     const payload = {
       devices: [
         {
@@ -21,10 +21,10 @@ describe("handleInitialDevices", () => {
       ],
     };
 
-    handlerInitialDevices(payload, { setDevices });
+    handlerInitialDevices(payload, { setUserDevices });
 
-    expect(setDevices).toHaveBeenCalledOnce();
-    const mappedDevices = setDevices.mock.calls[0][0];
+    expect(setUserDevices).toHaveBeenCalledOnce();
+    const mappedDevices = setUserDevices.mock.calls[0][0];
     expect(mappedDevices).toHaveLength(2);
     expect(mappedDevices[0].id).toBe(1);
     expect(mappedDevices[1].id).toBe(2);
