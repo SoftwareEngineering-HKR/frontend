@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { BUILDERS } from "../../src/hooks/wsMessages/messageBuilders";
+import { BUILDERS } from "../../../src/hooks/wsMessages/messageBuilders";
 
 const buildDeleteDevice = BUILDERS["delete device"];
 

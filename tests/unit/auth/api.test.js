@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { auth, logout, getData } from '../../src/service/api';
+import { auth, logout, getData } from '../../../src/service/api';
 
 describe('api.js', () => {
   beforeEach(() => {
