@@ -37,11 +37,11 @@ describe("Room-related WebSocket Messages", { sequential: true }, () => {
     afterAll(async () => {
         userWS.close();
 
+        // delete test user at the end
         adminWS.send("delete user", { name: TEST_USERS.user.username });
         const res = await adminWS.waitFor((m) => m.type === "action response");
 
         console.log(`[cleanup] ${res.payload.message}`);
-
         adminWS.close();
     });
 
@@ -100,6 +100,39 @@ describe("Room-related WebSocket Messages", { sequential: true }, () => {
         });
     });
 
+    describe("Rename Room", { sequential: true }, () => {
+        const newRoomName = "renamed_test_room";
+        it("success", async () => {
+            adminWS.send("update room", { id: testRoomId, name: newRoomName });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 200,
+                    message: `Successfully updated room ${testRoomId}.`,
+                },
+            });
+        });
+
+        it("permission denied for users", async () => {
+            userWS.send("update room", { id: testRoomId, name: newRoomName });
+            const res = await userWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 403,
+                    message: "Permission denied!",
+                },
+            });
+        });
+    });
+
     describe("Delete Room", { sequential: true }, () => {
         it("success", async () => {
             adminWS.send("delete room", { id: testRoomId });
@@ -117,7 +150,9 @@ describe("Room-related WebSocket Messages", { sequential: true }, () => {
         });
 
         it("failure to delete non-existent room", async () => {
-            adminWS.send("delete room", { id: "fakeRoomId" });
+            // create fake UUID, otherwise the test "passes" for incorrect reasons
+            const fakeRoomUUID = "8cf2fed6-9f3e-41d5-b18b-6ee458996b3b";
+            adminWS.send("delete room", { id: fakeRoomUUID });
             const res = await adminWS.waitFor(
                 (m) => m.type === "action response",
             );
@@ -131,7 +166,7 @@ describe("Room-related WebSocket Messages", { sequential: true }, () => {
             });
         });
 
-        it("permission denied to delete room", async () => {
+        it("permission denied for users", async () => {
             userWS.send("delete room", { id: "fakeRoomId" });
             const res = await userWS.waitFor(
                 (m) => m.type === "action response",
