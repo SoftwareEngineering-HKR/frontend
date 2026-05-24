@@ -17,7 +17,8 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
     let adminWS;
     let userWS;
     let devices;
-    let testDeviceId;
+    let testDevice;
+    let newRoom;
 
     // log in as admin to be able to perform all device management actions
     // create user to test that users are not allowed to perform device actions
@@ -28,6 +29,15 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
 
             const userRes = await authService.auth("signup", TEST_USERS.user);
             userWS = createWsClient(userRes.accessToken);
+
+            // create new room
+            adminWS.send("create room", { room: "test_room" });
+            await adminWS.waitFor((m) => m.type === "action response");
+            adminWS.send("get all rooms");
+            const roomsRes = await adminWS.waitFor((m) => m.type === "rooms");
+            newRoom = roomsRes.payload.rooms[0];
+
+            console.log(newRoom);
         } catch (err) {
             console.warn(
                 `[setup] Could not set up initial logins ${err.message}`,
@@ -38,11 +48,13 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
     afterAll(async () => {
         userWS.close();
 
-        // delete test user at the end
+        // delete test user and test room at the end
         adminWS.send("delete user", { name: TEST_USERS.user.username });
-        const res = await adminWS.waitFor((m) => m.type === "action response");
+        await adminWS.waitFor((m) => m.type === "action response");
 
-        console.log(`[cleanup] ${res.payload.message}`);
+        adminWS.send("delete room", { id: newRoom.id });
+        await adminWS.waitFor((m) => m.type === "action response");
+
         adminWS.close();
     });
 
@@ -64,9 +76,9 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             }
 
             devices = res.payload.devices;
-            testDeviceId = res.payload.devices[0].id;
+            testDevice = res.payload.devices[0];
             console.log(devices);
-            console.log(testDeviceId);
+            console.log(testDevice);
         });
 
         it("permission denied for users", async () => {
@@ -93,7 +105,7 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
 
         it("success", async () => {
             adminWS.send("update device", {
-                id: testDeviceId,
+                id: testDevice.id,
                 name: newDeviceInfo.name,
                 description: newDeviceInfo.description,
             });
@@ -105,7 +117,7 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
                 type: "action response",
                 payload: {
                     statusCode: 200,
-                    message: `Successfully updated device ${testDeviceId}.`,
+                    message: `Successfully updated device ${testDevice.id}.`,
                 },
             });
 
@@ -120,11 +132,101 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             expect(devices[0].description).toBe(newDeviceInfo.description);
         });
 
-        it("permission denied for users", async () => {
-            userWS.send("update device", {
-                id: testDeviceId,
+        it("failure on non-existent device", async () => {
+            adminWS.send("update device", {
+                id: "fakeDeviceID",
                 name: newDeviceInfo.name,
                 description: newDeviceInfo.description,
+            });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 500,
+                    message: "Failed to update device!",
+                },
+            });
+        });
+
+        it("permission denied for users", async () => {
+            userWS.send("update device", {
+                id: testDevice.id,
+                name: newDeviceInfo.name,
+                description: newDeviceInfo.description,
+            });
+            const res = await userWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 403,
+                    message: "Permission denied!",
+                },
+            });
+        });
+    });
+
+    describe("Update Device Room", { sequential: true }, async () => {
+        it("success", async () => {
+            adminWS.send("update device room", {
+                deviceId: testDevice.id,
+                roomId: newRoom.id,
+            });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 200,
+                    message: `Successfully updated ${testDevice.id}'s room.`,
+                },
+            });
+
+            // refresh device info
+            adminWS.send("get all device info");
+            const deviceRes = await adminWS.waitFor(
+                (m) => m.type === "device info",
+            );
+            devices = deviceRes.payload.devices;
+            testDevice = devices.find((d) => d.id === testDevice.id);
+
+            console.log(testDevice);
+
+            expect(testDevice.room).toBe(newRoom.name);
+        });
+
+        it("failure on non-existent room", async () => {
+            // create fake UUID, otherwise the test "passes" for incorrect reasons
+            const fakeRoomUUID = "8cf2fed6-9f3e-41d5-b18b-6ee458996b3b";
+
+            adminWS.send("update device room", {
+                deviceId: testDevice.id,
+                roomId: fakeRoomUUID,
+            });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 500,
+                    message: "Failed to update device room!",
+                },
+            });
+        });
+
+        it("permission denied for users", async () => {
+            userWS.send("update device room", {
+                deviceId: testDevice.id,
+                roomId: newRoom.id,
             });
             const res = await userWS.waitFor(
                 (m) => m.type === "action response",
