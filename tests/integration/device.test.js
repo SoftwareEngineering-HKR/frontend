@@ -37,13 +37,25 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             adminWS.send("get all rooms");
             const roomsRes = await adminWS.waitFor((m) => m.type === "rooms");
             newRoom = roomsRes.payload.rooms[0];
+            console.log(newRoom);
 
             // get users (with IDs)
             adminWS.send("get users");
             const usersRes = await adminWS.waitFor((m) => m.type === "users");
             users = usersRes.payload.users;
 
-            console.log(newRoom);
+            console.log(users);
+
+            // assign a light to user
+            adminWS.send("add user to device", {
+                userId: users[0].id, // this is the admin user
+                deviceId: "023DDB9F66B7",
+            });
+            let res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+            console.log("assigning light to admin");
+            console.log(res);
         } catch (err) {
             console.warn(
                 `[setup] Could not set up initial logins ${err.message}`,
@@ -82,7 +94,9 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             }
 
             devices = res.payload.devices;
-            testDevice = res.payload.devices[0];
+            testDevice = res.payload.devices.find(
+                (d) => d.id !== "023DDB9F66B7",
+            );
             console.log(devices);
             console.log(testDevice);
         });
@@ -291,6 +305,43 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
                 payload: {
                     statusCode: 403,
                     message: "Permission denied!",
+                },
+            });
+        });
+    });
+
+    describe("Update Device Value", { sequential: true }, () => {
+        it("success", async () => {
+            adminWS.send("update value", {
+                deviceId: "023DDB9F66B7", // hardcoded a light ID
+                value: 1, // turns the light on
+            });
+            const res = await adminWS.waitFor((m) => m.type === "update value");
+
+            expect(res).toMatchObject({
+                type: "update value",
+                payload: {
+                    deviceID: "023DDB9F66B7",
+                    content: "1",
+                },
+            });
+        });
+    });
+
+    describe("Remove Own Device Association", { sequential: true }, () => {
+        it("success", async () => {
+            adminWS.send("delete yourself from device", {
+                deviceId: "023DDB9F66B7", // hardcoded a light ID
+            });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 200,
+                    message: "Successfully deleted user from device!",
                 },
             });
         });
