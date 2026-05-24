@@ -19,6 +19,7 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
     let devices;
     let testDevice;
     let newRoom;
+    let users;
 
     // log in as admin to be able to perform all device management actions
     // create user to test that users are not allowed to perform device actions
@@ -36,6 +37,11 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             adminWS.send("get all rooms");
             const roomsRes = await adminWS.waitFor((m) => m.type === "rooms");
             newRoom = roomsRes.payload.rooms[0];
+
+            // get users (with IDs)
+            adminWS.send("get users");
+            const usersRes = await adminWS.waitFor((m) => m.type === "users");
+            users = usersRes.payload.users;
 
             console.log(newRoom);
         } catch (err) {
@@ -227,6 +233,102 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             userWS.send("update device room", {
                 deviceId: testDevice.id,
                 roomId: newRoom.id,
+            });
+            const res = await userWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 403,
+                    message: "Permission denied!",
+                },
+            });
+        });
+    });
+
+    describe("Assign Device to User", { sequential: true }, () => {
+        it("success", async () => {
+            adminWS.send("add user to device", {
+                userId: users[0].id,
+                deviceId: testDevice.id,
+            });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 200,
+                    message: "Successfully assigned device to user!",
+                },
+            });
+
+            // refresh devices
+            adminWS.send("get all device info");
+            const deviceRes = await adminWS.waitFor(
+                (m) => m.type === "device info",
+            );
+            devices = deviceRes.payload.devices;
+            testDevice = devices.find((d) => d.id === testDevice.id);
+
+            expect(testDevice.users).toContainEqual(users[0]);
+        });
+
+        it("permission denied for users", async () => {
+            userWS.send("add user to device", {
+                userId: users[1].id,
+                deviceId: testDevice.id,
+            });
+            const res = await userWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 403,
+                    message: "Permission denied!",
+                },
+            });
+        });
+    });
+
+    describe("Unassign Device to User", { sequential: true }, () => {
+        it("success", async () => {
+            adminWS.send("delete user from device", {
+                userId: users[0].id,
+                deviceId: testDevice.id,
+            });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 200,
+                    message: "Successfully deleted user from device!",
+                },
+            });
+
+            // refresh devices
+            adminWS.send("get all device info");
+            const deviceRes = await adminWS.waitFor(
+                (m) => m.type === "device info",
+            );
+            devices = deviceRes.payload.devices;
+            testDevice = devices.find((d) => d.id === testDevice.id);
+
+            expect(testDevice.users).not.toContainEqual(users[0]);
+        });
+
+        it("permission denied for users", async () => {
+            userWS.send("delete user from device", {
+                userId: users[1].id,
+                deviceId: testDevice.id,
             });
             const res = await userWS.waitFor(
                 (m) => m.type === "action response",
