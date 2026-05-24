@@ -7,10 +7,6 @@ const TEST_USERS = {
         username: `test_user`,
         password: "testtest",
     },
-    user2: {
-        username: `test_user_2`,
-        password: "testtest",
-    },
     admin: {
         username: "admin",
         password: "password",
@@ -40,12 +36,6 @@ describe("User-related WebSocket Messages", { sequential: true }, () => {
 
     afterAll(async () => {
         userWS.close();
-
-        // delete test user at the end
-        adminWS.send("delete user", { name: TEST_USERS.user.username });
-        const res = await adminWS.waitFor((m) => m.type === "action response");
-
-        console.log(`[cleanup] ${res.payload.message}`);
         adminWS.close();
     });
 
@@ -127,10 +117,11 @@ describe("User-related WebSocket Messages", { sequential: true }, () => {
             });
         });
 
-        it("failure on same role (admin to admin)", async () => {
+        it("failure on same role (user to user)", async () => {
+            // now test_user is back to being "user"
             adminWS.send("update user role", {
-                userName: TEST_USERS.admin.username,
-                role: "admin",
+                userName: TEST_USERS.user.username,
+                role: "user",
             });
             const res = await adminWS.waitFor(
                 (m) => m.type === "action response",
