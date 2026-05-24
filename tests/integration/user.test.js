@@ -16,7 +16,6 @@ const TEST_USERS = {
 describe("User-related WebSocket Messages", { sequential: true }, () => {
     let adminWS;
     let userWS;
-    let testUserId;
 
     // log in as admin to be able to perform all user management actions
     // create user to test that users are not allowed to perform user actions
@@ -34,7 +33,7 @@ describe("User-related WebSocket Messages", { sequential: true }, () => {
         }
     });
 
-    afterAll(async () => {
+    afterAll(() => {
         userWS.close();
         adminWS.close();
     });
@@ -58,9 +57,6 @@ describe("User-related WebSocket Messages", { sequential: true }, () => {
                 expect(typeof user.username).toBe("string");
                 expect(typeof user.type).toBe("string");
             }
-
-            testUserId = res.payload.users.at(-1)?.id;
-            expect(testUserId).toBeDefined();
         });
 
         it("permission denied for users", async () => {
