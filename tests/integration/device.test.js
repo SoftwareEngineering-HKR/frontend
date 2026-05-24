@@ -17,6 +17,7 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
     let adminWS;
     let userWS;
     let devices;
+    let testDeviceId;
 
     // log in as admin to be able to perform all device management actions
     // create user to test that users are not allowed to perform device actions
@@ -63,11 +64,68 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             }
 
             devices = res.payload.devices;
+            testDeviceId = res.payload.devices[0].id;
             console.log(devices);
+            console.log(testDeviceId);
         });
 
         it("permission denied for users", async () => {
             userWS.send("get all device info");
+            const res = await userWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 403,
+                    message: "Permission denied!",
+                },
+            });
+        });
+    });
+
+    describe("Update Device Name and Description", { sequential: true }, () => {
+        const newDeviceInfo = {
+            name: "newDeviceName",
+            description: "new device description",
+        };
+
+        it("success", async () => {
+            adminWS.send("update device", {
+                id: testDeviceId,
+                name: newDeviceInfo.name,
+                description: newDeviceInfo.description,
+            });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 200,
+                    message: `Successfully updated device ${testDeviceId}.`,
+                },
+            });
+
+            // refresh device info
+            adminWS.send("get all device info");
+            const deviceRes = await adminWS.waitFor(
+                (m) => m.type === "device info",
+            );
+            devices = deviceRes.payload.devices;
+
+            expect(devices[0].name).toBe(newDeviceInfo.name);
+            expect(devices[0].description).toBe(newDeviceInfo.description);
+        });
+
+        it("permission denied for users", async () => {
+            userWS.send("update device", {
+                id: testDeviceId,
+                name: newDeviceInfo.name,
+                description: newDeviceInfo.description,
+            });
             const res = await userWS.waitFor(
                 (m) => m.type === "action response",
             );
