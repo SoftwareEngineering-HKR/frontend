@@ -241,4 +241,51 @@ describe("Device-related WebSocket Messages", { sequential: true }, () => {
             });
         });
     });
+
+    describe("Delete Device", { sequential: true }, () => {
+        it("success", async () => {
+            adminWS.send("delete device", { id: testDevice.id });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 200,
+                    message: `Successfully deleted device ${testDevice.id}.`,
+                },
+            });
+        });
+
+        it("failure to delete non-existent device", async () => {
+            adminWS.send("delete device", { id: "fakeDeviceID" });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 500,
+                    message: "Failed to delete device!",
+                },
+            });
+        });
+
+        it("permission denied for users", async () => {
+            userWS.send("delete device", { id: "fakeDeviceID" });
+            const res = await userWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 403,
+                    message: "Permission denied!",
+                },
+            });
+        });
+    });
 });
