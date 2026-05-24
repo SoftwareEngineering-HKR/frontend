@@ -13,7 +13,7 @@ const TEST_USERS = {
   }
 }
 
-describe("Authentication API", { sequential: true },() => {
+describe("Authentication API", { sequential: true }, () => {
 
   describe("/signup", { sequential: true }, () => {
 
@@ -57,12 +57,12 @@ describe("Authentication API", { sequential: true },() => {
   afterAll(async () => {
     try {
       let res = await authService.auth("login", TEST_USERS.admin);
-      const client = createWsClient(res.accessToken);
-      const promise = client.waitFor((m) => m.type === "action response");
-      await client.send("delete user", { name: TEST_USERS.user.username });
+      const ws = createWsClient(res.accessToken);
+      const promise = ws.waitFor((m) => m.type === "action response");
+      await ws.send("delete user", { name: TEST_USERS.user.username });
       res = await promise;
       console.log(`[cleanup] ${res.payload.message}`);
-      client.close();
+      ws.close();
     } catch (err) {
       console.warn(`[cleanup] Could not delete test user: ${err.message}`);
     }
