@@ -115,5 +115,35 @@ describe("Room-related WebSocket Messages", { sequential: true }, () => {
                 },
             });
         });
+
+        it("failure to delete non-existent room", async () => {
+            adminWS.send("delete room", { id: "fakeRoomId" });
+            const res = await adminWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 500,
+                    message: "Failed to delete room!",
+                },
+            });
+        });
+
+        it("permission denied to delete room", async () => {
+            userWS.send("delete room", { id: "fakeRoomId" });
+            const res = await userWS.waitFor(
+                (m) => m.type === "action response",
+            );
+
+            expect(res).toMatchObject({
+                type: "action response",
+                payload: {
+                    statusCode: 403,
+                    message: "Permission denied!",
+                },
+            });
+        });
     });
 });
