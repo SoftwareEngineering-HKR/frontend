@@ -11,14 +11,20 @@ describe("handlerDeviceOnlineState", () => {
 
   it("device turns online", () => {
     const setDevices = vi.fn();
-    handlerDeviceOnlineState({ deviceID: 1, content: true }, { setDevices });
+    handlerDeviceOnlineState(
+      { deviceID: 1, content: true },
+      { setDevices, setUserDevices: vi.fn() },
+    );
     const result = setDevices.mock.calls[0][0](prevDevices);
     expect(result.find((d) => d.id === 1).isOnline).toBe(true);
   });
 
   it("device turns offline", () => {
     const setDevices = vi.fn();
-    handlerDeviceOnlineState({ deviceID: 2, content: false }, { setDevices });
+    handlerDeviceOnlineState(
+      { deviceID: 2, content: false },
+      { setDevices, setUserDevices: vi.fn() },
+    );
     const result = setDevices.mock.calls[0][0](prevDevices);
     expect(result.find((d) => d.id === 2).isOnline).toBe(false);
   });

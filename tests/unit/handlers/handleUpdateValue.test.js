@@ -13,22 +13,22 @@ describe("handlerUpdateValue", () => {
     const pendingRef = {
       current: { 1: { timerId: null, resolve, reject: vi.fn() } },
     };
-    const setDevices = vi.fn();
+    const setUserDevices = vi.fn();
     const payload = { deviceID: 1, content: "1" };
 
-    handlerUpdateValue(payload, { setDevices, pendingRef });
+    handlerUpdateValue(payload, { setUserDevices, pendingRef });
 
     expect(resolve).toHaveBeenCalled();
     expect(pendingRef.current[1]).toBeUndefined();
   });
 
   it("updates the device action value in state", () => {
-    const setDevices = vi.fn();
+    const setUserDevices = vi.fn();
     const pendingRef = { current: {} };
     const payload = { deviceID: 1, content: "1" };
 
-    handlerUpdateValue(payload, { setDevices, pendingRef });
-    const result = setDevices.mock.calls[0][0](prevDevices);
+    handlerUpdateValue(payload, { setUserDevices, pendingRef });
+    const result = setUserDevices.mock.calls[0][0](prevDevices);
 
     expect(result.find((d) => d.id === 1).actions[0].value).toBe(1);
   });
