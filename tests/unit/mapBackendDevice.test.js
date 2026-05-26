@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mapBackendDevice } from "../src/hooks/wsMessages/deviceMapping";
+import { mapBackendDevice } from "../../src/hooks/wsMessages/deviceMapping";
 
 describe("mapBackendDevice", () => {
   it("maps a toggle device correctly", () => {

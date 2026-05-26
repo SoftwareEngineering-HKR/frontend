@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
-import LoginForm from '../src/components/auth/LoginForm';
+import LoginForm from '../../src/components/auth/LoginForm';
 
 vi.mock('../src/components/common/Input', () => ({
   default: ({ label, error, onChange, disabled, ...props }) => (

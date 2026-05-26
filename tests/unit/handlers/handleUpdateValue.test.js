@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { HANDLERS } from "../src/hooks/wsMessages/messageHandlers";
+import { HANDLERS } from "../../../src/hooks/wsMessages/messageHandlers";
 
 const handlerUpdateValue = HANDLERS["update value"];
 
